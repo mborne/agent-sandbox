@@ -1,0 +1,14 @@
+# One entry per line; a leading dot also matches subdomains
+.anthropic.com
+.claude.ai
+.github.com
+.githubusercontent.com
+ghcr.io
+.pypi.org
+files.pythonhosted.org
+registry.npmjs.org
+.ubuntu.com
+.debian.org
+.geopf.fr
+.gouv.fr
+.ign.fr

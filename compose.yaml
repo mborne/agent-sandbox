@@ -1,0 +1,46 @@
+services:
+  sandbox:
+    build: ./opencode
+    # Keep the container idle; run the CLI with `docker compose exec sandbox opencode`
+    entrypoint: ["tail", "-f", "/dev/null"]
+    environment:
+      HTTP_PROXY: http://proxy:3128
+      HTTPS_PROXY: http://proxy:3128
+      http_proxy: http://proxy:3128
+      https_proxy: http://proxy:3128
+      NO_PROXY: localhost,127.0.0.1,proxy
+      no_proxy: localhost,127.0.0.1,proxy
+      NODE_USE_ENV_PROXY: "1"
+    volumes:
+      - data:/home/ubuntu/workspace
+      # ~/.config (opencode.json, written by setup-albert) and ~/.local (opencode
+      # credentials and sessions, prompt history, tree-sitter grammars, user tools)
+      - config:/home/ubuntu/.config
+      - local:/home/ubuntu/.local
+    networks:
+      - agent
+    depends_on:
+      - proxy
+
+  proxy:
+    image: ubuntu/squid:latest
+    volumes:
+      - ./squid/squid.conf:/etc/squid/squid.conf:ro
+      - ./squid/allowed-domains.txt:/etc/squid/allowed-domains.txt:ro
+    networks:
+      - agent
+      - egress
+    restart: unless-stopped
+
+volumes:
+  data:
+    name: opencode-data
+  config:
+    name: opencode-config
+  local:
+    name: opencode-local
+
+networks:
+  agent:
+    internal: true
+  egress:

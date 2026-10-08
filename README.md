@@ -1,0 +1,121 @@
+# opencode-sandbox
+
+![Experimental](https://img.shields.io/badge/status-EXPERIMENTAL-orange?style=for-the-badge)
+
+> [!WARNING]
+> **Experimental.** Test implementation of a variant of [albert-code](https://github.com/etalab-ia/albert-code#albert-code) built on Docker and its network isolation features (`docker network create --internal agents). See [docs/networking.md](docs/networking.md) for the network architecture.
+
+Isolated container for running the [opencode](https://opencode.ai) agent on code, with **network access restricted to an allowlist of domains**.
+
+## Features
+
+- **Network isolation**: no direct Internet access, all traffic goes through a Squid proxy that only allows the domains in [squid/allowed-domains.txt](squid/allowed-domains.txt), on ports 80 and 443. Every request is logged. → [docs/networking.md](docs/networking.md)
+- **Model provider setup**: `setup-albert` configures the [Albert API](https://guides.ia.numerique.gouv.fr/albert-api) in one command; other providers use `opencode auth login`. → [docs/model-provider.md](docs/model-provider.md)
+- **Opt-in GitHub access**: no Git credentials by default; `setup-github` adds a fine-grained token so the agent can push and open pull requests. → [docs/github.md](docs/github.md)
+- **MCP servers**: recommended remote servers for French public data (`datagouv`, `geocontext`, `insee`). → [docs/mcp.md](docs/mcp.md)
+- **Agent skills**: installing skills for the whole sandbox, recommended skills (`datagouv-apis`, `insee-public-data`, `geodata`). → [docs/skills.md](docs/skills.md)
+- **Persistent configuration**: providers, tokens, skills and cloned repositories live on named volumes and survive container recreation (see [Architecture](#architecture)).
+
+## Architecture
+
+| Service   | Role                                                                                                                                                                                                                                   |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sandbox` | Image built from [opencode/Dockerfile](opencode/Dockerfile) (Ubuntu 24.04, `git`, `gh`, `jq`, `ripgrep`, Node.js with `npm`/`npx`, Python 3 with `uv`/`uvx`, opencode CLI, setup scripts). Runs as the unprivileged user `ubuntu` (uid 1000). Working directory: `/home/ubuntu/workspace`. |
+| `proxy`   | Squid, the only way out to the Internet. Filters domains using [squid/allowed-domains.txt](squid/allowed-domains.txt).                                                                                                                 |
+
+- The `agent` network is `internal`: the `sandbox` container has **no direct Internet access**, everything goes through `proxy:3128` (`HTTP(S)_PROXY` variables). See [docs/networking.md](docs/networking.md) for the diagram and filtering rules.
+- Only ports 80 and 443 are allowed: **no SSH**, repositories are cloned over HTTPS.
+- Named volumes, which survive container recreation (the rest of the home directory is lost):
+
+  | Volume            | Mounted on                           | Content                                                                                                                        |
+  | ----------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+  | `opencode-data`   | `/home/ubuntu/workspace`             | Cloned repositories                                                                                                            |
+  | `opencode-config` | `/home/ubuntu/.config`               | opencode configuration (`opencode/opencode.json`: providers, default model), `gh` token and Git configuration (`setup-github`) |
+  | `opencode-local`  | `/home/ubuntu/.local`                 | opencode credentials (`opencode auth login`), sessions, prompt history, recent models; tree-sitter grammars; tools installed in `~/.local/bin` |
+
+## Usage
+
+### 1. Start the stack
+
+```bash
+docker compose up -d --build
+```
+
+The `sandbox` container stays idle (`tail -f /dev/null`); you get into it with `docker compose exec`.
+
+### 2. Clone the repository
+
+The GitHub domains (`github.com`, `githubusercontent.com`) are allowed. Clone over HTTPS:
+
+```bash
+docker compose exec sandbox git clone https://github.com/<org>/<repo>.git
+```
+
+The repository lands in `/home/ubuntu/workspace/<repo>`.
+
+For any other host (GitLab, internal Gitea…), add its domain to [squid/allowed-domains.txt](squid/allowed-domains.txt) and reload the proxy:
+
+```bash
+docker compose restart proxy
+```
+
+### 3. Configure the model provider
+
+```bash
+docker compose exec sandbox setup-albert        # Albert API
+docker compose exec sandbox opencode auth login # other providers
+```
+
+See [docs/model-provider.md](docs/model-provider.md). The provider's domain must be in the allowlist.
+
+### 4. Run opencode on the repository
+
+```bash
+docker compose exec sandbox opencode <repo>
+```
+
+The UI opens in the repository. For a shell in the container:
+
+```bash
+docker compose exec sandbox bash
+```
+
+### 5. Get the work back
+
+If `setup-github` was run, push from the container (`git push`, `gh pr create`). Otherwise copy the repository to the host and push from there:
+
+```bash
+docker compose cp sandbox:/home/ubuntu/workspace/<repo> ./<repo>
+```
+
+See [docs/github.md](docs/github.md).
+
+## Common operations
+
+| Action                                                                          | Command                                                             |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Show requests allowed / denied by the proxy                                     | `docker compose logs -f proxy`                                      |
+| Update opencode (latest release)                                                | `docker compose build --no-cache sandbox && docker compose up -d`   |
+| Pin an opencode version                                                         | `docker compose build --build-arg OPENCODE_VERSION=1.18.35 sandbox` |
+| Pin the Node.js major version or the uv version                                 | `docker compose build --build-arg NODE_VERSION=22 --build-arg UV_VERSION=0.12.24 sandbox` |
+| Stop the stack                                                                  | `docker compose down`                                               |
+| Remove everything, including cloned repositories, configuration and credentials | `docker compose down -v`                                            |
+
+## Troubleshooting
+
+- **`curl: (56) CONNECT tunnel failed, response 403`** or a failing clone: the domain is not in [squid/allowed-domains.txt](squid/allowed-domains.txt). Check with `docker compose logs proxy` (`TCP_DENIED`).
+- **`fatal: unable to fork`** on a `git clone git@…`: there is no SSH client in the image and port 22 is blocked. Use the HTTPS URL.
+- **`EACCES` on `npm install -g`**: global packages go to `/usr/local`, owned by root. Use `npx -y <package>` instead, or `uv tool install` / `uvx` for Python tools.
+- **`Permission denied` in `/home/ubuntu/workspace`**: the volume was created by a root container. Fix the ownership:
+  ```bash
+  docker compose exec -u root sandbox chown -R 1000:1000 /home/ubuntu/workspace
+  ```
+
+## Resources
+
+- [Network architecture](docs/networking.md)
+- [Model provider](docs/model-provider.md)
+- [GitHub credentials](docs/github.md)
+- [MCP servers](docs/mcp.md)
+- [Agent skills](docs/skills.md)
+- [Differences from albert-code](docs/albert-code-differences.md)
