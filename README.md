@@ -14,7 +14,15 @@ Isolated container for running the [opencode](https://opencode.ai) agent on code
 - **Opt-in GitHub access**: no Git credentials by default; `setup-github` adds a fine-grained token so the agent can push and open pull requests. → [docs/github.md](docs/github.md)
 - **MCP servers**: recommended remote servers for French public data (`datagouv`, `geocontext`, `insee`). → [docs/mcp.md](docs/mcp.md)
 - **Agent skills**: installing skills for the whole sandbox, recommended skills (`datagouv-apis`, `insee-public-data`, `geodata`). → [docs/skills.md](docs/skills.md)
+- **Portable approach**: the sandboxing mechanism (isolated network, Squid allowlist, persistent volumes) does not depend on opencode or Docker Compose. The same setup can run another coding agent such as Claude Code, or move to Kubernetes in web mode with NetworkPolicies forcing traffic through the proxy. → [docs/portability.md](docs/portability.md)
 - **Persistent configuration**: providers, tokens, skills and cloned repositories live on named volumes and survive container recreation (see [Architecture](#architecture)).
+
+## Security
+
+> [!CAUTION]
+> **The sandbox does not protect the host on its own.** It limits what the agent can reach on the network, but the `sandbox` container shares the host kernel and relies on the Docker daemon, which runs as root by default. A container escape or a misconfigured daemon exposes the host.
+>
+> **Host security must be ensured by hardening the Docker configuration**: audit it with [Docker Bench for Security](https://github.com/docker/docker-bench-security), enable `userns-remap` (or rootless Docker), never mount the Docker socket, keep the kernel and Docker Engine up to date. → [docs/docker-hardening.md](docs/docker-hardening.md)
 
 ## Architecture
 
@@ -114,8 +122,14 @@ See [docs/github.md](docs/github.md).
 ## Resources
 
 - [Network architecture](docs/networking.md)
+- [Docker hardening](docs/docker-hardening.md)
+- [Portability](docs/portability.md)
 - [Model provider](docs/model-provider.md)
 - [GitHub credentials](docs/github.md)
 - [MCP servers](docs/mcp.md)
 - [Agent skills](docs/skills.md)
 - [Differences from albert-code](docs/albert-code-differences.md)
+
+## License
+
+[MIT](LICENSE)
