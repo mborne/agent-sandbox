@@ -3,7 +3,7 @@
 ![Experimental](https://img.shields.io/badge/status-EXPERIMENTAL-orange?style=for-the-badge)
 
 > [!WARNING]
-> **Experimental.** Test implementation of a variant of [albert-code](https://github.com/etalab-ia/albert-code#albert-code) built on Docker and its network isolation features (`docker network create --internal agents). See [docs/networking.md](docs/networking.md) for the network architecture.
+> **Experimental.** Test of an approach to sandboxing a coding agent with Docker network isolation: the agent runs on an internal network (`docker network create --internal agents`) and only reaches the Internet through a filtering proxy. See [docs/networking.md](docs/networking.md) for the network architecture.
 
 Isolated container for running the [opencode](https://opencode.ai) agent on code, with **network access restricted to an allowlist of domains**.
 
@@ -14,6 +14,7 @@ Isolated container for running the [opencode](https://opencode.ai) agent on code
 - **Opt-in GitHub access**: no Git credentials by default; `setup-github` adds a fine-grained token so the agent can push and open pull requests. → [docs/github.md](docs/github.md)
 - **MCP servers**: recommended remote servers for French public data (`datagouv`, `geocontext`, `insee`). → [docs/mcp.md](docs/mcp.md)
 - **Agent skills**: installing skills for the whole sandbox, recommended skills (`datagouv-apis`, `insee-public-data`, `geodata`). → [docs/skills.md](docs/skills.md)
+- **Web mode**: browser UI (`opencode serve`) on `127.0.0.1:4096`, on by default (`OPENCODE_SERVER_ENABLED=0` to disable), password generated on first start, through a relay that keeps the sandbox on its internal network. → [docs/web-mode.md](docs/web-mode.md)
 - **Portable approach**: the sandboxing mechanism (isolated network, Squid allowlist, persistent volumes) does not depend on opencode or Docker Compose. The same setup can run another coding agent such as Claude Code, or move to Kubernetes in web mode with NetworkPolicies forcing traffic through the proxy. → [docs/portability.md](docs/portability.md)
 - **Persistent configuration**: providers, tokens, skills and cloned repositories live on named volumes and survive container recreation (see [Architecture](#architecture)).
 
@@ -30,6 +31,7 @@ Isolated container for running the [opencode](https://opencode.ai) agent on code
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sandbox` | Image built from [opencode/Dockerfile](opencode/Dockerfile) (Ubuntu 24.04, `git`, `gh`, `jq`, `ripgrep`, Node.js with `npm`/`npx`, Python 3 with `uv`/`uvx`, opencode CLI, setup scripts). Runs as the unprivileged user `ubuntu` (uid 1000). Working directory: `/home/ubuntu/workspace`. |
 | `proxy`   | Squid, the only way out to the Internet. Filters domains using [squid/allowed-domains.txt](squid/allowed-domains.txt).                                                                                                                 |
+| `web`     | nginx relay publishing `opencode serve` (web mode) on `127.0.0.1:4096`, see [docs/web-mode.md](docs/web-mode.md).                                                                                                    |
 
 - The `agent` network is `internal`: the `sandbox` container has **no direct Internet access**, everything goes through `proxy:3128` (`HTTP(S)_PROXY` variables). See [docs/networking.md](docs/networking.md) for the diagram and filtering rules.
 - Only ports 80 and 443 are allowed: **no SSH**, repositories are cloned over HTTPS.
@@ -43,54 +45,65 @@ Isolated container for running the [opencode](https://opencode.ai) agent on code
 
 ## Usage
 
-### 1. Start the stack
+opencode can be used in two ways, which share the same container, repositories and configuration:
+
+- **[Web usage](#web-usage)**: browser UI on <http://127.0.0.1:4096> (default).
+- **[CLI usage](#cli-usage)**: terminal UI or a shell through `docker compose exec`.
+
+### Getting started
+
+These steps apply to both usages.
+
+1. Start the stack:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+2. Configure the model provider (its domain must be in the allowlist, see [docs/model-provider.md](docs/model-provider.md)):
+
+   ```bash
+   docker compose exec sandbox setup-albert        # Albert API
+   docker compose exec sandbox opencode auth login # other providers
+   ```
+
+3. Clone the repository. The GitHub domains (`github.com`, `githubusercontent.com`) are allowed; clone over HTTPS:
+
+   ```bash
+   docker compose exec sandbox git clone https://github.com/<org>/<repo>.git
+   ```
+
+   The repository lands in `/home/ubuntu/workspace/<repo>`. For any other host (GitLab, internal Gitea…), add its domain to [squid/allowed-domains.txt](squid/allowed-domains.txt) and reload the proxy with `docker compose restart proxy`.
+
+### Web usage
+
+The `sandbox` container runs `opencode serve` as its main process. Get the user and password (they are not written to the logs):
 
 ```bash
-docker compose up -d --build
+docker compose exec sandbox web-credentials
 ```
 
-The `sandbox` container stays idle (`tail -f /dev/null`); you get into it with `docker compose exec`.
+Open <http://127.0.0.1:4096>, log in and pick the repository among the projects under `/home/ubuntu/workspace`. Password management, the relay and the security model are described in [docs/web-mode.md](docs/web-mode.md).
 
-### 2. Clone the repository
+### CLI usage
 
-The GitHub domains (`github.com`, `githubusercontent.com`) are allowed. Clone over HTTPS:
-
-```bash
-docker compose exec sandbox git clone https://github.com/<org>/<repo>.git
-```
-
-The repository lands in `/home/ubuntu/workspace/<repo>`.
-
-For any other host (GitLab, internal Gitea…), add its domain to [squid/allowed-domains.txt](squid/allowed-domains.txt) and reload the proxy:
-
-```bash
-docker compose restart proxy
-```
-
-### 3. Configure the model provider
-
-```bash
-docker compose exec sandbox setup-albert        # Albert API
-docker compose exec sandbox opencode auth login # other providers
-```
-
-See [docs/model-provider.md](docs/model-provider.md). The provider's domain must be in the allowlist.
-
-### 4. Run opencode on the repository
+Run the terminal UI in the repository:
 
 ```bash
 docker compose exec sandbox opencode <repo>
 ```
 
-The UI opens in the repository. For a shell in the container:
+For a shell in the container:
 
 ```bash
 docker compose exec sandbox bash
 ```
 
-### 5. Get the work back
+The CLI works whether web mode is on or off. If the browser UI is not needed, set `OPENCODE_SERVER_ENABLED=0` (in `.env` or the environment) and run `docker compose up -d`: the `sandbox` container then stays idle and no server listens (see [docs/web-mode.md](docs/web-mode.md#enable-or-disable)).
 
-If `setup-github` was run, push from the container (`git push`, `gh pr create`). Otherwise copy the repository to the host and push from there:
+### Get the work back
+
+If `setup-github` was run, push from the container (`git push`, `gh pr create`) or ask the agent to do it, whatever the usage. Otherwise copy the repository to the host and push from there:
 
 ```bash
 docker compose cp sandbox:/home/ubuntu/workspace/<repo> ./<repo>
@@ -122,6 +135,7 @@ See [docs/github.md](docs/github.md).
 ## Resources
 
 - [Network architecture](docs/networking.md)
+- [Web mode](docs/web-mode.md)
 - [Docker hardening](docs/docker-hardening.md)
 - [Portability](docs/portability.md)
 - [Model provider](docs/model-provider.md)

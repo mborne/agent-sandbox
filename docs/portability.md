@@ -34,14 +34,15 @@ Their domains are **not** in the allowlist. For example, an agent using the Open
 
 ## Kubernetes, web mode
 
-The same architecture maps to Kubernetes, with the agent exposed through a web UI instead of `docker compose exec` (opencode provides `opencode web` / `opencode serve`). This makes the sandbox usable from a browser, one pod per user, without Docker on the user's machine.
+The same architecture maps to Kubernetes, with the agent exposed through a web UI instead of `docker compose exec` (`opencode serve`, already usable locally, see [web-mode.md](web-mode.md)). This makes the sandbox usable from a browser, one pod per user, without Docker on the user's machine.
 
 ### Mapping
 
 | Docker Compose | Kubernetes |
 | -------------- | ---------- |
-| `sandbox` service | Deployment (or StatefulSet) running `opencode web`, exposed through a Service and an Ingress |
+| `sandbox` service | Deployment (or StatefulSet) running the same image (web mode, password from a Secret in `OPENCODE_SERVER_PASSWORD`), exposed through a Service and an Ingress |
 | `proxy` service | Deployment running Squid, Service on port 3128 |
+| `web` relay (nginx) | Ingress controller |
 | `squid.conf`, `allowed-domains.txt` | ConfigMap mounted read-only in the proxy pod |
 | `agent` network with `internal: true` | **NetworkPolicy**: the sandbox pod may only reach the proxy (and cluster DNS) |
 | `egress` network | NetworkPolicy allowing the proxy pod out on ports 80/443 |
@@ -76,7 +77,7 @@ spec:
         - namespaceSelector:
             matchLabels: { kubernetes.io/metadata.name: ingress-nginx }
       ports:
-        - { protocol: TCP, port: 4096 } # opencode web port
+        - { protocol: TCP, port: 4096 } # opencode serve port
   egress:
     - to:
         - podSelector:

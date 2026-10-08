@@ -23,10 +23,11 @@ flowchart LR
 
 | Network  | Docker option     | Members            | Role |
 |----------|-------------------|--------------------|------|
-| `agent`  | [`internal: true`](https://docs.docker.com/reference/cli/docker/network/create/#options) | `sandbox`, `proxy` | Isolated network: no gateway to the outside, Docker DNS resolves service names only (`proxy`). |
+| `agent`  | [`internal: true`](https://docs.docker.com/reference/cli/docker/network/create/#options) | `sandbox`, `proxy`, `web` | Isolated network: no gateway to the outside, Docker DNS resolves service names only (`proxy`, `web`). |
 | `egress` | standard bridge   | `proxy`            | Gives the proxy its outbound route to the Internet. |
+| `web`    | standard bridge   | `web`              | Only used to publish the relay port `127.0.0.1:4096` on the host (web mode). |
 
-`proxy` is the only container attached to both networks, so it is the only path between the sandbox and the Internet.
+`proxy` is the only container that can carry traffic from the sandbox to the Internet. The `web` relay is also attached to `agent` and to a bridge network, but it only carries inbound traffic to the sandbox, see [Inbound traffic: the nginx relay](#inbound-traffic-the-nginx-relay).
 
 ## How a request goes out
 
@@ -89,6 +90,40 @@ docker compose logs -f proxy
 ```
 
 `TCP_TUNNEL` / `TCP_MISS` means allowed, `TCP_DENIED` means blocked. A denied request shows up in the sandbox as `CONNECT tunnel failed, response 403` (HTTPS) or an HTTP 403 (plain HTTP).
+
+## Inbound traffic: the nginx relay
+
+Web mode needs the host to reach `opencode serve` in the sandbox. Docker does not publish ports of a container that is only on an `internal` network, so the `web` service (official `nginx:alpine` image) sits in between:
+
+```mermaid
+flowchart LR
+    browser["Browser on the host"] -->|"127.0.0.1:4096"| web
+    subgraph webnet["network: web (bridge)"]
+        web["web<br/>nginx :4096"]
+    end
+    subgraph agent["network: agent (internal: true)"]
+        sandbox["sandbox<br/>opencode serve :4096"]
+        proxy["proxy<br/>Squid :3128"]
+    end
+    web -->|"proxy_pass http://sandbox:4096"| sandbox
+    sandbox -->|"outbound: HTTP(S)_PROXY"| proxy
+```
+
+- **Published on the loopback only**: `127.0.0.1:4096:4096` in [compose.yaml](../compose.yaml). The UI is not reachable from other machines; for remote access, see [web-mode.md](web-mode.md#security).
+- **Fixed upstream**: [web/nginx.conf](../web/nginx.conf) has a single `server` that forwards every request to `http://sandbox:4096`. It is a reverse proxy, not a forward proxy: the sandbox cannot use it to reach another host, so it is no way around the Squid allowlist.
+- **One direction**: the relay opens connections to the sandbox, never the reverse. The sandbox's outbound traffic still goes through `proxy:3128`.
+- **Long-lived connections**: HTTP/1.1 with the `Upgrade` / `Connection` headers forwarded (WebSocket for the terminal), `proxy_buffering off` (server-sent events for session updates) and a one-hour `proxy_read_timeout`.
+- **No TLS, no authentication in nginx**: traffic stays on the host loopback, and access control is the opencode server password (see [web-mode.md](web-mode.md#password)). Add TLS and authentication in front before exposing it beyond the loopback.
+- **Name resolution**: nginx resolves `sandbox` through Docker DNS when it starts (`depends_on: sandbox` in [compose.yaml](../compose.yaml)). It answers `502 Bad Gateway` when `opencode serve` is not running, for example with `OPENCODE_SERVER_ENABLED=0`.
+
+The relay itself has an outbound route through the `web` bridge network (required to publish a port), but it runs nothing besides nginx with this static configuration, and no domain needs to be added to [squid/allowed-domains.txt](../squid/allowed-domains.txt).
+
+To check the relay:
+
+```bash
+docker compose logs -f web                       # access log, one line per request
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4096/   # 502: opencode serve unreachable
+```
 
 ## Limits
 
