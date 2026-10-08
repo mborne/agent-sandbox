@@ -12,3 +12,4 @@ registry.npmjs.org
 .geopf.fr
 .gouv.fr
 .ign.fr
+.insee.fr
