@@ -22,9 +22,9 @@ To run another agent (Claude Code, Codex CLI, Gemini CLI, Aider…) in the same 
 
 ### Claude Code
 
-[Claude Code](https://docs.claude.com/en/docs/claude-code/overview) fits without network changes: `.anthropic.com` (API) and `.claude.ai` (login) are already in [squid/allowed-domains.txt](../squid/allowed-domains.txt), and it honors `HTTPS_PROXY`.
+[Claude Code](https://code.claude.com/docs/en/overview) fits without network changes: `.anthropic.com` (API) and `.claude.ai` (login) are already in [squid/allowed-domains.txt](../squid/allowed-domains.txt), and it honors `HTTPS_PROXY`.
 
-- Install: `npm install -g @anthropic-ai/claude-code` as root in the Dockerfile (before `USER ubuntu`).
+- Install: `npm install -g @anthropic-ai/claude-code` as root in the Dockerfile (before `USER ubuntu`). The native installer (`claude.ai/install.sh`) writes to `~/.local`, which the `opencode-local` volume hides once it exists.
 - Configuration: stored in `~/.claude` and `~/.claude.json` by default. Set `CLAUDE_CONFIG_DIR=/home/ubuntu/.config/claude` in [compose.yaml](../compose.yaml) to keep it on the `opencode-config` volume.
 - Run: `docker compose exec sandbox claude`.
 

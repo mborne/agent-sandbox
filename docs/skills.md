@@ -4,18 +4,25 @@ A skill is a folder holding a `SKILL.md` file (YAML frontmatter with `name` and 
 
 opencode looks for skills in:
 
-| Scope            | Paths                                                                                                   |
-| ---------------- | ------------------------------------------------------------------------------------------------------- |
-| Whole sandbox    | `~/.config/opencode/skills/<name>/SKILL.md` (on the `opencode-config` volume, survives recreation)      |
-| One repository   | `.opencode/skills/<name>/SKILL.md`, `.claude/skills/<name>/SKILL.md`, `.agents/skills/<name>/SKILL.md` |
+| Scope          | Paths                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Whole sandbox  | `~/.config/opencode/skills/<name>/SKILL.md` (on the `opencode-config` volume, survives recreation)                             |
+|                | `~/.claude/skills/<name>/SKILL.md`, `~/.agents/skills/<name>/SKILL.md` (not on a volume, lost when the container is recreated) |
+| One repository | `.opencode/skills/<name>/SKILL.md`, `.claude/skills/<name>/SKILL.md`, `.agents/skills/<name>/SKILL.md`                         |
 
-Install skills in `~/.config/opencode/skills/` to keep the cloned repositories untouched.
+Install skills in `~/.config/opencode/skills/`: they survive container recreation and the cloned repositories stay untouched.
 
 ## Recommended skills
 
-The main source is [etalab-ia/skills](https://github.com/etalab-ia/skills): skills aligned with French public service standards (DSFR, RGAA accessibility, ANSSI security guides, data.gouv.fr APIs…). Install them by following its README, from a shell in the sandbox (`docker compose exec sandbox bash`). Node.js is in the image and GitHub is in the allowlist.
+The main source is [etalab-ia/skills](https://github.com/etalab-ia/skills): skills aligned with French public service standards (DSFR, RGAA accessibility, ANSSI security guides, data.gouv.fr APIs…). Install them globally for opencode (`-g` targets `~/.config/opencode/skills/`; without it, the skills land in the current directory):
 
-Also useful: `insee-public-data` from [InseeFrLab/opencode-onyxia](https://github.com/InseeFrLab/opencode-onyxia) (INSEE MELODI and metadata APIs, `pynsee`). It targets the [Onyxia](https://www.onyxia.sh/) platform, so some instructions do not apply in the sandbox, and it needs `.insee.fr` in [squid/allowed-domains.txt](../squid/allowed-domains.txt) (then `docker compose restart proxy`).
+```bash
+docker compose exec sandbox npx -y skills add etalab-ia/skills -a opencode -g
+```
+
+Node.js is in the image and GitHub is in the allowlist. Add `--skill <name>` to install a single skill.
+
+Also useful: `insee-public-data` from [InseeFrLab/opencode-onyxia](https://github.com/InseeFrLab/opencode-onyxia) (INSEE MELODI and metadata APIs, `pynsee`). It targets the [Onyxia](https://www.onyxia.sh/) platform, so some instructions do not apply in the sandbox, and its APIs are on `.insee.fr`, already in [squid/allowed-domains.txt](../squid/allowed-domains.txt).
 
 There is no official IGN skill yet: for the Géoplateforme, use the [geocontext MCP server](mcp.md#recommended-servers).
 

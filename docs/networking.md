@@ -23,7 +23,7 @@ flowchart LR
 
 | Network  | Docker option     | Members            | Role |
 |----------|-------------------|--------------------|------|
-| `agent`  | [`internal: true`](https://docs.docker.com/reference/cli/docker/network/create/#options) | `sandbox`, `proxy`, `web` | Isolated network: no gateway to the outside, Docker DNS resolves service names only (`proxy`, `web`). |
+| `agent`  | [`internal: true`](https://docs.docker.com/reference/cli/docker/network/create/#options) | `sandbox`, `proxy`, `web` | Isolated network: no gateway to the outside, Docker DNS resolves service names only (`sandbox`, `proxy`, `web`). |
 | `egress` | standard bridge   | `proxy`            | Gives the proxy its outbound route to the Internet. |
 | `web`    | standard bridge   | `web`              | Only used to publish the relay port `127.0.0.1:4096` on the host (web mode). |
 
