@@ -49,6 +49,9 @@ ENV PATH="/home/ubuntu/.opencode/bin:${PATH}"
 # Setup helpers, run with `docker compose exec sandbox setup-albert` (or setup-github)
 COPY --chmod=755 scripts/setup-albert.sh /usr/local/bin/setup-albert
 COPY --chmod=755 scripts/setup-github.sh /usr/local/bin/setup-github
+# Container main process: web mode or idle (see compose.yaml)
+COPY --chmod=755 scripts/entrypoint.sh /usr/local/bin/sandbox-entrypoint
+COPY --chmod=755 scripts/web-credentials.sh /usr/local/bin/web-credentials
 
 # Mount points for the named volumes (workspace, ~/.config, ~/.local).
 # Created as ubuntu so that an empty named volume mounted here inherits uid

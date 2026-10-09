@@ -13,38 +13,11 @@ Install skills in `~/.config/opencode/skills/` to keep the cloned repositories u
 
 ## Recommended skills
 
-| Skill               | Data                                                                                                     | Source                                                                                                                         | Domains used at runtime                              |
-| ------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
-| `datagouv-apis`     | data.gouv.fr main, metrics and tabular APIs (official)                                                    | [datagouv/datagouv-skill](https://github.com/datagouv/datagouv-skill), `SKILL.md` at the root                                  | `.gouv.fr` (allowed)                                 |
-| `insee-public-data` | INSEE MELODI and metadata APIs, `pynsee`, data.gouv.fr                                                     | [InseeFrLab/opencode-onyxia](https://github.com/InseeFrLab/opencode-onyxia), `.opencode/skills/insee-public-data/`            | `.insee.fr` (not allowed by default), `.gouv.fr`     |
-| `geodata`           | Geometries of French communes and IRIS (IGN ADMIN EXPRESS, `geo.api.gouv.fr`), projections, choropleths | [InseeFrLab/opencode-onyxia](https://github.com/InseeFrLab/opencode-onyxia), `.opencode/skills/geodata/`                       | `.gouv.fr`, `.geopf.fr`, `.ign.fr` (allowed)         |
+The main source is [etalab-ia/skills](https://github.com/etalab-ia/skills): skills aligned with French public service standards (DSFR, RGAA accessibility, ANSSI security guides, data.gouv.fr APIs…). Install them by following its README, from a shell in the sandbox (`docker compose exec sandbox bash`). Node.js is in the image and GitHub is in the allowlist.
 
-There is no official IGN skill yet: for the Géoplateforme, use the [geocontext MCP server](mcp.md#recommended-servers). The `insee-public-data` and `geodata` skills target the [Onyxia](https://www.onyxia.sh/) data science platform (S3 storage, Python/R): some instructions do not apply in the sandbox.
+Also useful: `insee-public-data` from [InseeFrLab/opencode-onyxia](https://github.com/InseeFrLab/opencode-onyxia) (INSEE MELODI and metadata APIs, `pynsee`). It targets the [Onyxia](https://www.onyxia.sh/) platform, so some instructions do not apply in the sandbox, and it needs `.insee.fr` in [squid/allowed-domains.txt](../squid/allowed-domains.txt) (then `docker compose restart proxy`).
 
-Other skills for French public services (DSFR, RGAA accessibility, ANSSI security guides…) are in [etalab-ia/skills](https://github.com/etalab-ia/skills), under `skills/<name>/`.
-
-## Install a skill
-
-Clone the source repository inside the sandbox and copy the skill folder (GitHub is in the allowlist):
-
-```bash
-docker compose exec sandbox sh -c '
-  set -e
-  dst=~/.config/opencode/skills
-  tmp=$(mktemp -d)
-  git clone --depth 1 https://github.com/datagouv/datagouv-skill "$tmp/datagouv"
-  mkdir -p "$dst/datagouv-apis" && cp "$tmp/datagouv/SKILL.md" "$dst/datagouv-apis/"
-  git clone --depth 1 https://github.com/InseeFrLab/opencode-onyxia "$tmp/insee"
-  cp -r "$tmp/insee/.opencode/skills/insee-public-data" "$tmp/insee/.opencode/skills/geodata" "$dst/"
-  rm -rf "$tmp"
-  ls "$dst"'
-```
-
-The folder name must match the `name` field of the frontmatter. To update a skill, run the same commands again; to remove one, delete its folder.
-
-For the `insee-public-data` skill, add `.insee.fr` to [squid/allowed-domains.txt](../squid/allowed-domains.txt) and run `docker compose restart proxy`.
-
-`npx skills add` (the installer suggested by some repositories) also works, since the image includes Node.js; check where it writes the skill, so it ends up under `~/.config/opencode/skills/` rather than in the repository.
+There is no official IGN skill yet: for the Géoplateforme, use the [geocontext MCP server](mcp.md#recommended-servers).
 
 ## Permissions
 
