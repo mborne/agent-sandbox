@@ -33,7 +33,7 @@ A container for running a coding agent, [opencode](https://opencode.ai) or [Clau
 
 | Service   | Role                                                                                                                                                                                                                                   |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sandbox` | Image built from [sandbox/Dockerfile](sandbox/Dockerfile), target chosen by `SANDBOX_IMAGE` (Ubuntu 24.04, `git`, `gh`, `jq`, `ripgrep`, Node.js with `npm`/`npx`, Python 3 with `uv`/`uvx`, setup scripts; plus the opencode CLI or Claude Code and ttyd). Runs as the unprivileged user `ubuntu` (uid 1000). Working directory: `/home/ubuntu/workspace`. |
+| `sandbox` | Image built from [sandbox/Dockerfile](sandbox/Dockerfile), target chosen by `SANDBOX_IMAGE` (Ubuntu 24.04, `git`, `gh`, `jq`, `ripgrep`, Node.js with `npm`/`npx`, Python 3 with `uv`/`uvx`, setup scripts; plus the opencode CLI or Claude Code and ttyd), see [sandbox/README.md](sandbox/README.md). Runs as the unprivileged user `ubuntu` (uid 1000). Working directory: `/home/ubuntu/workspace`. |
 | `proxy`   | Squid, the only way out to the Internet. Filters domains using [squid/allowed-domains.txt](squid/allowed-domains.txt).                                                                                                                 |
 | `web`     | nginx relay publishing the sandbox web UI (web mode) on `127.0.0.1:4096`, see [docs/web-mode.md](docs/web-mode.md).                                                                                                    |
 
@@ -110,7 +110,7 @@ The CLI works whether web mode is on or off. If the browser UI is not needed, se
 
 ### Choose the agent
 
-`SANDBOX_IMAGE` (in `.env` or the environment) selects the image, a target of [sandbox/Dockerfile](sandbox/Dockerfile):
+`SANDBOX_IMAGE` (in `.env` or the environment) selects the image, a target of [sandbox/Dockerfile](sandbox/Dockerfile) (see [sandbox/README.md](sandbox/README.md)):
 
 | `SANDBOX_IMAGE`      | CLI        | Web UI on port 4096                                  |
 | -------------------- | ---------- | ---------------------------------------------------- |
@@ -158,6 +158,7 @@ See [docs/github.md](docs/github.md).
 
 ## Resources
 
+- [Sandbox image](sandbox/README.md): build stages, content, build arguments
 - [Network architecture](docs/networking.md)
 - [Web mode](docs/web-mode.md)
 - [Docker hardening](docs/docker-hardening.md)
