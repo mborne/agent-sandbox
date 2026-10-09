@@ -1,6 +1,6 @@
 # GitHub credentials
 
-The sandbox has no Git credentials by default, so the agent cannot push. `setup-github` gives it a GitHub token so it can push and use the `gh` CLI. Source: [opencode/scripts/setup-github.sh](../opencode/scripts/setup-github.sh).
+The sandbox has no Git credentials by default, so the agent cannot push. `setup-github` gives it a GitHub token so it can push and use the `gh` CLI. Source: [sandbox/scripts/setup-github.sh](../sandbox/scripts/setup-github.sh).
 
 ```bash
 docker compose exec sandbox setup-github

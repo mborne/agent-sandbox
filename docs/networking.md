@@ -7,7 +7,7 @@ The `sandbox` container has no route to the Internet. Its only way out is the Sq
 ```mermaid
 flowchart LR
     subgraph agent["network: agent (internal: true)"]
-        sandbox["sandbox<br/>opencode, git, curl<br/>HTTP(S)_PROXY=http://proxy:3128"]
+        sandbox["sandbox<br/>agent, git, curl<br/>HTTP(S)_PROXY=http://proxy:3128"]
     end
     proxy["proxy<br/>Squid :3128<br/>domain allowlist<br/>(attached to agent and egress)"]
     subgraph egress["network: egress (bridge)"]
@@ -31,7 +31,7 @@ flowchart LR
 
 ## How a request goes out
 
-Tools in the sandbox (opencode, `git`, `curl`, npm…) pick up the proxy from the environment set in [compose.yaml](../compose.yaml): `HTTP_PROXY`, `HTTPS_PROXY` (and their lowercase forms), `NO_PROXY=localhost,127.0.0.1,proxy`, and `NODE_USE_ENV_PROXY=1` for Node.js-based tools.
+Tools in the sandbox (opencode or Claude Code, `git`, `curl`, npm…) pick up the proxy from the environment set in [compose.yaml](../compose.yaml): `HTTP_PROXY`, `HTTPS_PROXY` (and their lowercase forms), `NO_PROXY=localhost,127.0.0.1,proxy`, and `NODE_USE_ENV_PROXY=1` for Node.js-based tools.
 
 ```mermaid
 sequenceDiagram
@@ -93,7 +93,7 @@ docker compose logs -f proxy
 
 ## Inbound traffic: the nginx relay
 
-Web mode needs the host to reach `opencode serve` in the sandbox. Docker does not publish ports of a container that is only on an `internal` network, so the `web` service (official `nginx:alpine` image) sits in between:
+Web mode needs the host to reach the web UI in the sandbox (`opencode serve` or ttyd). Docker does not publish ports of a container that is only on an `internal` network, so the `web` service (official `nginx:alpine` image) sits in between:
 
 ```mermaid
 flowchart LR
@@ -102,7 +102,7 @@ flowchart LR
         web["web<br/>nginx :4096"]
     end
     subgraph agent["network: agent (internal: true)"]
-        sandbox["sandbox<br/>opencode serve :4096"]
+        sandbox["sandbox<br/>opencode serve or ttyd :4096"]
         proxy["proxy<br/>Squid :3128"]
     end
     web -->|"proxy_pass http://sandbox:4096"| sandbox
@@ -113,8 +113,8 @@ flowchart LR
 - **Fixed upstream**: [web/nginx.conf](../web/nginx.conf) has a single `server` that forwards every request to `http://sandbox:4096`. It is a reverse proxy, not a forward proxy: the sandbox cannot use it to reach another host, so it is no way around the Squid allowlist.
 - **One direction**: the relay opens connections to the sandbox, never the reverse. The sandbox's outbound traffic still goes through `proxy:3128`.
 - **Long-lived connections**: HTTP/1.1 with the `Upgrade` / `Connection` headers forwarded (WebSocket for the terminal), `proxy_buffering off` (server-sent events for session updates) and a one-hour `proxy_read_timeout`.
-- **No TLS, no authentication in nginx**: traffic stays on the host loopback, and access control is the opencode server password (see [web-mode.md](web-mode.md#password)). Add TLS and authentication in front before exposing it beyond the loopback.
-- **Name resolution**: nginx resolves `sandbox` through Docker DNS when it starts (`depends_on: sandbox` in [compose.yaml](../compose.yaml)). It answers `502 Bad Gateway` when `opencode serve` is not running, for example with `OPENCODE_SERVER_ENABLED=0`.
+- **No TLS, no authentication in nginx**: traffic stays on the host loopback, and access control is the web UI password (see [web-mode.md](web-mode.md#password)). Add TLS and authentication in front before exposing it beyond the loopback.
+- **Name resolution**: nginx resolves `sandbox` through Docker DNS when it starts (`depends_on: sandbox` in [compose.yaml](../compose.yaml)). It answers `502 Bad Gateway` when the web UI is not running, for example with `SANDBOX_SERVER_ENABLED=0`.
 
 The relay itself has an outbound route through the `web` bridge network (required to publish a port), but it runs nothing besides nginx with this static configuration, and no domain needs to be added to [squid/allowed-domains.txt](../squid/allowed-domains.txt).
 
@@ -122,11 +122,11 @@ To check the relay:
 
 ```bash
 docker compose logs -f web                       # access log, one line per request
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4096/   # 502: opencode serve unreachable
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4096/   # 502: web UI unreachable
 ```
 
 ## Limits
 
 - Filtering is per domain, not per URL or content: everything reachable on an allowed domain is reachable by the agent, including uploads if it holds credentials for that service. Keep the allowlist short and do not give the sandbox credentials it does not need (it has no Git credentials by default; if you run `setup-github`, use a fine-grained token limited to the repositories you need).
-- Secrets the agent uses (model provider API key, `opencode auth login` credentials, GitHub token from `setup-github`) live in the sandbox and can be read by the agent; the allowlist limits where they could be sent.
+- Secrets the agent uses (model provider API key, `opencode auth login` and Claude Code credentials, GitHub token from `setup-github`) live in the sandbox and can be read by the agent; the allowlist limits where they could be sent.
 - The `localnet` ACL accepts any private source address. The proxy publishes no port on the host, so only containers attached to its networks (and the Docker host itself) can reach it.

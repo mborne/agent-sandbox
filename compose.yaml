@@ -1,13 +1,18 @@
 services:
   sandbox:
-    build: ./opencode
-    # Web mode (`opencode serve`); the CLI also works with `docker compose exec sandbox opencode`.
-    # Password: OPENCODE_SERVER_PASSWORD (e.g. in .env), otherwise generated; read it with `web-credentials`.
-    # OPENCODE_SERVER_ENABLED=0 disables web mode (the container stays idle)
-    entrypoint: ["sandbox-entrypoint"]
+    # SANDBOX_IMAGE selects the tool (Dockerfile target): opencode (default) or claude
+    build:
+      context: ./sandbox
+      target: ${SANDBOX_IMAGE:-opencode}
+    image: agent-sandbox-${SANDBOX_IMAGE:-opencode}
+    # Web mode: the image's web UI on port 4096 (see docs/web-mode.md); the CLI also
+    # works with `docker compose exec sandbox opencode` (or `claude`).
+    # Password: SANDBOX_SERVER_PASSWORD (e.g. in .env), otherwise generated; read it with `web-credentials`.
+    # SANDBOX_SERVER_ENABLED=0 disables web mode (the container stays idle)
     environment:
-      OPENCODE_SERVER_ENABLED: ${OPENCODE_SERVER_ENABLED:-1}
-      OPENCODE_SERVER_PASSWORD: ${OPENCODE_SERVER_PASSWORD:-}
+      SANDBOX_SERVER_ENABLED: ${SANDBOX_SERVER_ENABLED:-1}
+      SANDBOX_SERVER_USERNAME: ${SANDBOX_SERVER_USERNAME:-}
+      SANDBOX_SERVER_PASSWORD: ${SANDBOX_SERVER_PASSWORD:-}
       HTTP_PROXY: http://proxy:3128
       HTTPS_PROXY: http://proxy:3128
       http_proxy: http://proxy:3128
@@ -17,8 +22,8 @@ services:
       NODE_USE_ENV_PROXY: "1"
     volumes:
       - data:/home/ubuntu/workspace
-      # ~/.config (opencode.json, written by setup-albert) and ~/.local (opencode
-      # credentials and sessions, prompt history, tree-sitter grammars, user tools)
+      # ~/.config (opencode.json written by setup-albert, Claude Code in claude/) and
+      # ~/.local (opencode credentials and sessions, tree-sitter grammars, user tools)
       - config:/home/ubuntu/.config
       - local:/home/ubuntu/.local
     networks:
@@ -37,7 +42,7 @@ services:
       - egress
     restart: unless-stopped
 
-  # Web mode: relays the host loopback to `opencode serve` (see docs/web-mode.md);
+  # Web mode: relays the host loopback to the sandbox web UI (see docs/web-mode.md);
   # the sandbox is on an internal network, where Docker cannot publish ports
   web:
     image: nginx:alpine

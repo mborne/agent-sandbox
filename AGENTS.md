@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Docker sandbox that runs the opencode agent behind a Squid proxy with a domain allowlist. See [README.md](README.md) for the layout and [docs/](docs/) for details.
+Docker sandbox that runs a coding agent (opencode or Claude Code, one image per tool, selected with `SANDBOX_IMAGE`) behind a Squid proxy with a domain allowlist. See [README.md](README.md) for the layout and [docs/](docs/) for details.
 
 ## Language
 
@@ -15,7 +15,7 @@ Exceptions: proper names and quoted external content (French dataset names, API 
 
 ## Code
 
-- Shell scripts: `#!/usr/bin/env bash`, `set -euo pipefail`, a header comment with usage examples (see [opencode/scripts/setup-albert.sh](opencode/scripts/setup-albert.sh)). Check with `bash -n` and `shellcheck` when available.
+- Shell scripts: `#!/usr/bin/env bash`, `set -euo pipefail`, a header comment with usage examples (see [sandbox/scripts/setup-albert.sh](sandbox/scripts/setup-albert.sh)). Check with `bash -n` and `shellcheck` when available.
 - Keep comments short; explain why, not what.
 - Never print or log secrets. Read them with `read -s`, pass them to `curl` through stdin (`-H @-`), write config files under `umask 077`.
 - Configuration written by setup scripts goes under `~/.config` (the `opencode-config` volume) so it survives container recreation. Merge into existing files instead of overwriting them.

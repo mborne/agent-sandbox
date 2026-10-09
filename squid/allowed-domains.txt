@@ -1,6 +1,8 @@
 # One entry per line; a leading dot also matches subdomains
 .anthropic.com
 .claude.ai
+# Claude Code: OAuth token exchange and refresh, for Console and claude.ai accounts
+platform.claude.com
 .github.com
 .githubusercontent.com
 ghcr.io
