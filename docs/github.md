@@ -19,7 +19,7 @@ The token is stored in plain text in the container, where the agent can read it 
 Tip: the creation form can be prefilled from the URL. For a token on your personal repositories, open (replace `<login>`):
 
 ```text
-https://github.com/settings/personal-access-tokens/new?name=agent-sandbox&description=opencode+sandbox&target_name=<login>&expires_in=30&contents=write&pull_requests=write
+https://github.com/settings/personal-access-tokens/new?name=agent-sandbox&description=agent+sandbox&target_name=<login>&expires_in=30&contents=write&pull_requests=write
 ```
 
 `target_name` is the resource owner (your login, or an organization), `expires_in` a number of days, and each permission is set with `<permission>=read|write`. Repository selection cannot be prefilled: pick *Only select repositories* and choose them before generating the token.
