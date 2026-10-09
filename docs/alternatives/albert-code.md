@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: High.** Same stack (opencode, Albert API, État skills, MCP), stronger isolation (VM), but no outbound filtering. It is being superseded by [just-code](just-code.md).
+> **Closeness to agent-sandbox: High.** Same stack (opencode, Albert API, État skills, MCP), stronger isolation (VM), but no outbound filtering. It is being superseded by [just-code](just-code.md).
 
 - **Project**: [etalab-ia/albert-code](https://github.com/etalab-ia/albert-code) (MIT, DINUM / IA dans l'État)
 - **Status**: experimental "v1", no tagged release; last commit 2026-09-24 prepares the uninstall "before the switch to just-code"
@@ -29,7 +29,7 @@ A one-command bundle for public servants: opencode running in a disposable [Lima
 | Platforms / deployment | macOS and Linux workstations (KVM required on Linux), no Windows, no server or Kubernetes mode |
 | Observability | None for network traffic |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**: kernel isolation from the host (VM); per-project setup (`AGENTS.md`, `opencode.json`, skills and MCP chosen at `setup`); guided install.
 - **Worse or missing**: no outbound filtering, so a prompt injection can send the key or the code anywhere; built around the Albert API; host directory mounted (secrets in the checkout are visible); workstation only, no web UI.

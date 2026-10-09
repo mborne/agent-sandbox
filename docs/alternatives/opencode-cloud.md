@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: Medium.** Same shape (opencode in a long-lived Docker container, named volumes, authenticated web UI, self-hosted), but no egress filtering and it ships a fork of opencode that stopped tracking upstream in February 2026.
+> **Closeness to agent-sandbox: Medium.** Same shape (opencode in a long-lived Docker container, named volumes, authenticated web UI, self-hosted), but no egress filtering and it ships a fork of opencode that stopped tracking upstream in February 2026.
 
 - **Project**: <https://github.com/pRizz/opencode-cloud> (MIT, single maintainer pRizz; mirror on gitea.com)
 - **Status**: README says "work in progress", "expect breaking changes". Last release `v25.1.3` on 2026-02-12, last commit on `main` 2026-02-21; only bot branches (dependency updates) since. The bundled opencode fork (<https://github.com/pRizz/opencode>) was last pushed 2026-02-21. 20 stars (checked 2026-10-09).
@@ -29,7 +29,7 @@ opencode-cloud runs a fork of opencode as a persistent service in a Docker conta
 | Platforms / deployment | Linux and macOS hosts with Docker; Docker Desktop; AWS CloudFormation (EC2 behind ALB, HTTPS); Railway; DigitalOcean droplet. No Kubernetes manifests found. |
 | Observability | Container logs (`occ logs`, json-file driver with rotation). No egress or request log. |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - Stronger web authentication: passkeys, TOTP 2FA, several users on one instance.
@@ -37,7 +37,7 @@ opencode-cloud runs a fork of opencode as a persistent service in a Docker conta
   - Service integration (systemd/launchd) and an update flow.
   - Large prebuilt image with many toolchains.
 - **Worse or missing**:
-  - No egress control at all: the core of opencode-sandbox ([../networking.md](../networking.md)) is absent.
+  - No egress control at all: the core of agent-sandbox ([../networking.md](../networking.md)) is absent.
   - Weaker container: passwordless `sudo`, extra capabilities, `--privileged` in systemd mode ([../docker-hardening.md](../docker-hardening.md)).
   - Runs a fork of opencode frozen since February 2026; upstream opencode features and fixes since then are missing.
   - Much larger code base (Rust CLI, Node CLI, fork as submodule, 1000+ commits) for one maintainer; activity stopped after February 2026.
@@ -49,7 +49,7 @@ opencode-cloud runs a fork of opencode as a persistent service in a Docker conta
 
 ## Adopting it
 
-Not a good base. Switching would lose the domain allowlist and request logging, and tie the owner to a stale opencode fork. Adding egress filtering would mean a Squid sidecar and an `internal` network in its compose file plus changes in the Rust CLI that creates containers. The passkey/2FA web login is the part worth watching; for opencode-sandbox, the nginx relay could gain stronger auth without the fork.
+Not a good base. Switching would lose the domain allowlist and request logging, and tie the owner to a stale opencode fork. Adding egress filtering would mean a Squid sidecar and an `internal` network in its compose file plus changes in the Rust CLI that creates containers. The passkey/2FA web login is the part worth watching; for agent-sandbox, the nginx relay could gain stronger auth without the fork.
 
 ## Sources
 

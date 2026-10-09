@@ -8,7 +8,7 @@ set -euo pipefail
 
 PORT=${OPENCODE_SERVER_PORT:-4096}
 USERNAME=${OPENCODE_SERVER_USERNAME:-opencode}
-PASSWORD_FILE=${XDG_CONFIG_HOME:-$HOME/.config}/opencode-sandbox/web-password
+PASSWORD_FILE=${XDG_CONFIG_HOME:-$HOME/.config}/agent-sandbox/web-password
 
 if [[ "${OPENCODE_SERVER_ENABLED:-1}" == "0" ]]; then
   echo "Web UI disabled (OPENCODE_SERVER_ENABLED=0)" >&2

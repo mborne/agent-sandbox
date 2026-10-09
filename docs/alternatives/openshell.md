@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: High.** Open-source, self-hosted sandbox runtime that runs opencode with deny-by-default egress on Docker, Podman, microVM or Kubernetes, with far finer policies, but much more complex to operate.
+> **Closeness to agent-sandbox: High.** Open-source, self-hosted sandbox runtime that runs opencode with deny-by-default egress on Docker, Podman, microVM or Kubernetes, with far finer policies, but much more complex to operate.
 
 - **Project**: <https://github.com/NVIDIA/OpenShell> (Apache-2.0, NVIDIA)
 - **Status**: very active. Created 2026-02-24, about 15.5k stars, 100+ contributors, last commit 2026-10-08. First stable line `v0.1.x` (`v0.1.2` on 2026-09-28) after the `v0.0.x` series (up to `v0.0.116`, 2026-08-28); weekly stable releases promised. Young project, APIs still changing (0.1.0 removed managed inference routes).
@@ -29,19 +29,19 @@ OpenShell is a gateway (control plane) plus a per-sandbox supervisor that runs a
 | Platforms / deployment | Self-hosted. Linux (Debian/Ubuntu, amd64/arm64), macOS Apple Silicon (Docker Desktop), Windows WSL 2 (experimental). Docker 28+ or Podman 5 for single host, Helm chart for Kubernetes 1.29+ (CNI must enforce NetworkPolicy, OpenShift documented), microVM driver. No GPU required; `--gpu` optional (Docker CDI, `nvidia.com/gpu` on Kubernetes). OIDC, workspaces and RBAC for multi-user gateways. |
 | Observability | Per-sandbox log of network, process, filesystem and config events in OCSF format (JSON export), `openshell logs`, gateway metrics. Policy advisor proposes narrow rules from denials; a formal "prover" flags risky policy changes. Anonymous telemetry on by default (`OPENSHELL_TELEMETRY_ENABLED=false`). |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - Egress is enforced at syscall level for every process, not only proxy-aware tools ([../networking.md](../networking.md)).
   - Rules per binary and per HTTP method/path, instead of per domain for the whole sandbox.
-  - Credentials never visible to the agent (opencode-sandbox stores them on a readable volume, see [../github.md](../github.md)).
+  - Credentials never visible to the agent (agent-sandbox stores them on a readable volume, see [../github.md](../github.md)).
   - Kubernetes is implemented (Helm chart), not only documented ([../portability.md](../portability.md)); optional microVM isolation.
   - Structured audit logs, multi-user gateway with OIDC.
 - **Worse or missing**:
   - Much larger system (gateway, supervisor, policies, provider profiles); steeper learning curve than one `compose.yaml`.
   - No equivalent of [../web-mode.md](../web-mode.md) out of the box; would need `service expose` and testing.
   - Requires Linux 6.2+ with Landlock and specific seccomp features; older hosts fail closed.
-  - TLS interception by default (opencode-sandbox does none); binary rules break when tools change interpreter paths.
+  - TLS interception by default (agent-sandbox does none); binary rules break when tools change interpreter paths.
   - Young 0.1 API with recent breaking changes; telemetry on by default.
 - **Same idea**:
   - Deny-by-default egress with an allowlist, every connection logged.
@@ -50,7 +50,7 @@ OpenShell is a gateway (control plane) plus a per-sandbox supervisor that runs a
 
 ## Adopting it
 
-The strongest candidate to replace opencode-sandbox on a server: open source, self-hosted, runs on a plain Linux Docker host or Kubernetes, and supports opencode. The owner would lose the simplicity of Docker Compose and the ready-made web mode. To match current features, the owner would need an opencode image, a provider profile for Albert, a policy translating [squid/allowed-domains.txt](../../squid/allowed-domains.txt) (with binary paths), and a tested way to expose `opencode serve`. These could be contributed upstream as an example or tutorial.
+The strongest candidate to replace agent-sandbox on a server: open source, self-hosted, runs on a plain Linux Docker host or Kubernetes, and supports opencode. The owner would lose the simplicity of Docker Compose and the ready-made web mode. To match current features, the owner would need an opencode image, a provider profile for Albert, a policy translating [squid/allowed-domains.txt](../../squid/allowed-domains.txt) (with binary paths), and a tested way to expose `opencode serve`. These could be contributed upstream as an example or tutorial.
 
 ## Sources
 

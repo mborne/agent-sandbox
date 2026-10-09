@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: Low.** These are APIs to create isolated VMs or containers on demand; several now have domain egress allowlists and secret injection stronger than ours, but none is a ready self-hosted opencode environment, and all but E2B depend on a SaaS control plane.
+> **Closeness to agent-sandbox: Low.** These are APIs to create isolated VMs or containers on demand; several now have domain egress allowlists and secret injection stronger than ours, but none is a ready self-hosted opencode environment, and all but E2B depend on a SaaS control plane.
 
 - **Project**: E2B, Daytona, Modal, Vercel Sandbox, Cloudflare Sandbox, Northflank, Deno Sandbox (links below; licenses per row)
 - **Status**: all commercial services in active development, except the open-source Daytona repository, archived after the June 2026 move to a private codebase (checked 2026-10-09).
@@ -25,11 +25,11 @@ These platforms give a program (usually an agent backend) an SDK to start a sand
 | [Northflank](https://northflank.com) | Kata Containers (Cloud Hypervisor), gVisor or Firecracker depending on workload | Network policies with egress allowlists by IP, CIDR, FQDN or hostname; default allow until a rule is added. Documented for BYOC clusters (managed cloud not verified). | Partly: BYOC runs workloads in your AWS/GCP/Azure/on-prem cluster, control plane stays SaaS | No | No guide found (not verified). |
 | [Deno Sandbox](https://docs.deno.com/sandbox/) | Linux microVM on Deno Deploy | `allowNet` host list enforced by an outbound proxy at the VM boundary; secrets appear as placeholders and are substituted only on requests to approved hosts. | No | No (SDK license not verified) | No guide found (not verified). Max lifetime 30 min at launch (Feb 2026). |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - Kernel isolation (microVM or gVisor) instead of a container sharing the host kernel ([../docker-hardening.md](../docker-hardening.md)).
-  - Vercel, Cloudflare and Deno keep secrets out of the sandbox (injected at the egress layer); opencode-sandbox stores them where the agent can read them.
+  - Vercel, Cloudflare and Deno keep secrets out of the sandbox (injected at the egress layer); agent-sandbox stores them where the agent can read them.
   - Egress is enforced at the network layer (no reliance on `HTTP(S)_PROXY`), with runtime policy updates and, for Vercel, `deny-all` including DNS.
   - Ephemeral sandboxes, snapshots, scaling to many parallel sessions.
 - **Worse or missing**:
@@ -44,7 +44,7 @@ These platforms give a program (usually an agent backend) an SDK to start a sand
 
 ## Adopting it
 
-Only if SaaS is acceptable. Then Vercel Sandbox or Cloudflare Sandbox offer the closest security model (domain allowlist plus secrets outside the sandbox), with an official opencode guide; the owner would lose self-hosting on a Linux server, the Squid logs, model choice beyond what the gateway proxies (Cloudflare's guide is built around AI Gateway and Anthropic), and the Kubernetes path. For a self-hosted option, E2B is the only open-source full stack (Firecracker, Postgres, Redis, ClickHouse); its single-host package is for evaluation, so production use means operating that stack or buying Enterprise. Daytona is no longer a safe open-source bet. None of these replaces opencode-sandbox as is; they are execution backends to build on.
+Only if SaaS is acceptable. Then Vercel Sandbox or Cloudflare Sandbox offer the closest security model (domain allowlist plus secrets outside the sandbox), with an official opencode guide; the owner would lose self-hosting on a Linux server, the Squid logs, model choice beyond what the gateway proxies (Cloudflare's guide is built around AI Gateway and Anthropic), and the Kubernetes path. For a self-hosted option, E2B is the only open-source full stack (Firecracker, Postgres, Redis, ClickHouse); its single-host package is for evaluation, so production use means operating that stack or buying Enterprise. Daytona is no longer a safe open-source bet. None of these replaces agent-sandbox as is; they are execution backends to build on.
 
 ## Sources
 

@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: Medium.** Its default network design is almost the same as ours (internal Docker network, dual-homed Squid with a domain allowlist), but it is a one-shot command wrapper built for GitHub Actions, not a persistent sandbox.
+> **Closeness to agent-sandbox: Medium.** Its default network design is almost the same as ours (internal Docker network, dual-homed Squid with a domain allowlist), but it is a one-shot command wrapper built for GitHub Actions, not a persistent sandbox.
 
 - **Project**: <https://github.com/github/gh-aw-firewall> (MIT, GitHub; moved from `githubnext/gh-aw-firewall`, which now redirects)
 - **Status**: very active. Latest release v0.28.49 on 2026-10-08, several releases per week, last commit 2026-10-08, about 150 stars (checked 2026-10-09). Part of GitHub's [Agentic Workflows](https://github.com/github/gh-aw) project.
@@ -29,7 +29,7 @@
 | Platforms / deployment | Linux only (Ubuntu 22.04+, x86_64/arm64), Docker 20.10+ with Compose v2. No macOS or Windows. GitHub Actions (hosted, self-hosted, ARC with DinD), or any Linux host. |
 | Observability | Squid access logs, structured audit log (`audit.jsonl`), token usage log, `awf logs` subcommands, optional OpenTelemetry. |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - SNI is checked against the allowlist, so domain fronting through an allowed CONNECT host is blocked. Our Squid only checks the CONNECT host.

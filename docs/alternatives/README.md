@@ -3,11 +3,11 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-Existing tools that sandbox coding agents, compared with opencode-sandbox to decide whether to adopt one of them, contribute to it, or borrow ideas. One sheet per tool, research done on 2026-10-09 ([issue #1](https://github.com/mborne/opencode-sandbox/issues/1)). These projects move fast: check the "Status" line of a sheet before relying on it.
+Existing tools that sandbox coding agents, compared with agent-sandbox to decide whether to adopt one of them, contribute to it, or borrow ideas. One sheet per tool, research done on 2026-10-09 ([issue #1](https://github.com/mborne/agent-sandbox/issues/1)). These projects move fast: check the "Status" line of a sheet before relying on it.
 
 ## What we compare against
 
-opencode-sandbox runs opencode in a Docker container on an `internal` network. Its only way out is a Squid proxy with a domain allowlist ([networking.md](../networking.md)). Code and configuration live on named volumes, a web UI is published on the host loopback ([web-mode.md](../web-mode.md)), and the design maps to Kubernetes ([portability.md](../portability.md)). Its known weak points:
+agent-sandbox runs opencode in a Docker container on an `internal` network. Its only way out is a Squid proxy with a domain allowlist ([networking.md](../networking.md)). Code and configuration live on named volumes, a web UI is published on the host loopback ([web-mode.md](../web-mode.md)), and the design maps to Kubernetes ([portability.md](../portability.md)). Its known weak points:
 
 - shared host kernel ([docker-hardening.md](../docker-hardening.md));
 - API keys and tokens readable by the agent;
@@ -18,7 +18,7 @@ opencode-sandbox runs opencode in a Docker container on an `internal` network. I
 
 | Tool | Category | Closeness | Isolation | Egress allowlist | Secrets kept out of the agent | opencode | Web UI | Server / Kubernetes | License | Activity |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **opencode-sandbox** | Container per agent | — | Container | Domains (Squid) | No | Yes | Yes | Compose, K8s documented | MIT | — |
+| **agent-sandbox** | Container per agent | — | Container | Domains (Squid) | No | Yes | Yes | Compose, K8s documented | MIT | — |
 | [just-code](just-code.md) | VM per agent | High | microVM (Microsandbox) | No (public Internet; the runtime supports domain rules) | Yes (proxy substitution) | Yes | No (`opencode serve` on 4096 in backend mode) | Workstation only | MIT | Very active |
 | [albert-code](albert-code.md) | VM per agent | High | VM (Lima) | No | No | Yes | No | Workstation only | MIT | Superseded by just-code |
 | [Docker Sandboxes](docker-sandboxes.md) | VM per agent | High | microVM | Domains, CIDR, method/path, transparent | Yes (proxy injection) | Yes (template) | No | Headless Linux, no K8s | Proprietary | Very active |
@@ -63,4 +63,4 @@ Whichever route is taken, two parts of this repository are worth keeping or movi
 
 ## Sheet format
 
-Each sheet gives a closeness rating, project facts (license, maintainer, status as checked), a "How it works" table (isolation, egress, credentials, code, persistence, interfaces, agents, platforms, observability), a comparison with opencode-sandbox, what adopting the tool would mean, and its sources. Facts that could not be checked are marked "not verified".
+Each sheet gives a closeness rating, project facts (license, maintainer, status as checked), a "How it works" table (isolation, egress, credentials, code, persistence, interfaces, agents, platforms, observability), a comparison with agent-sandbox, what adopting the tool would mean, and its sources. Facts that could not be checked are marked "not verified".
