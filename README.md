@@ -145,7 +145,7 @@ See [docs/github.md](docs/github.md).
 - [GitHub credentials](docs/github.md)
 - [MCP servers](docs/mcp.md)
 - [Agent skills](docs/skills.md)
-- [Differences from albert-code](docs/albert-code-differences.md)
+- [Alternatives](docs/alternatives/README.md): comparison with other agent sandboxes (albert-code, just-code, Docker Sandboxes, OpenShell…)
 
 ## License
 
