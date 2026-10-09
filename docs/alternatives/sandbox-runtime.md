@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: Medium.** Same egress idea (default deny, a proxy with a domain allowlist), but it is a per-process OS sandbox on the host, not a self-hosted container with persistent volumes and a web UI.
+> **Closeness to agent-sandbox: Medium.** Same egress idea (default deny, a proxy with a domain allowlist), but it is a per-process OS sandbox on the host, not a self-hosted container with persistent volumes and a web UI.
 
 - **Project**: [anthropics/sandbox-runtime](https://github.com/anthropics/sandbox-runtime) (formerly `anthropic-experimental/sandbox-runtime`, which redirects), npm `@anthropic-ai/sandbox-runtime` (Apache-2.0, Anthropic)
 - **Status**: "Beta Research Preview", config format may change. Release v0.0.79 on 2026-10-07, last commit 2026-10-08, about 5.5k stars, very active. The built-in Claude Code sandbox uses this package (Claude Code itself is proprietary).
@@ -29,7 +29,7 @@
 | Platforms / deployment | Linux (needs `bubblewrap`, `socat`, `ripgrep`; Ubuntu 24.04+ needs an AppArmor exception for user namespaces), macOS, WSL2, Windows (alpha). Inside an unprivileged Docker container it needs `enableWeakerNestedSandbox`, which "considerably weakens security". Self-hosted, no Kubernetes integration. |
 | Observability | macOS: system sandbox violation log. Linux: proxy denies and seccomp events in an in-memory violation store, `--debug` logging, otherwise `strace`. No persistent access log of allowed requests documented. |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - No Docker: lighter, works directly on a developer laptop (Linux, macOS, WSL2).

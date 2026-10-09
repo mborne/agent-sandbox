@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: Low.** A container egress filter, not an agent sandbox; but it is the closest drop-in candidate to replace our Squid component, on Docker Compose and Kubernetes.
+> **Closeness to agent-sandbox: Low.** A container egress filter, not an agent sandbox; but it is the closest drop-in candidate to replace our Squid component, on Docker Compose and Kubernetes.
 
 - **Project**: <https://github.com/g0lab/g0efilter> (MIT, `g0lab`, mostly a single maintainer)
 - **Status**: active, pre-1.0. Latest release v0.10.0 on 2026-10-03, about 75 releases since 2025-09, last commit 2026-10-08, about 11 stars. README warns that the configuration is not stable yet (checked 2026-10-09).
@@ -29,7 +29,7 @@ g0efilter is a Go agent that runs next to a workload and filters its outbound tr
 | Platforms / deployment | Docker Compose, Podman, Kubernetes (Kustomize component, Helm library chart, post-renderer, mutating webhook), GitHub Action. Images on Docker Hub, cosign-signed. |
 | Observability | Decision log (JSON Lines: allowed, blocked, audit), netfilter logs, Prometheus metrics, Kubernetes events, dashboard, notifications (chat, email, webhooks). |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - Transparent filtering: tools that ignore `HTTP(S)_PROXY` are filtered instead of failing; no proxy settings in the sandbox.
@@ -46,7 +46,7 @@ g0efilter is a Go agent that runs next to a workload and filters its outbound tr
 
 ## Adopting it
 
-Not a replacement for opencode-sandbox, but a possible replacement for the `proxy` service: run `g0efilter` with the policy directory and set `network_mode: "service:g0efilter"` on `sandbox`. This would change the design described in [networking.md](../networking.md) (no `internal` network, no proxy variables) and the `web` relay would have to reach the sandbox through the filter's namespace (not verified). We would keep the agent image, volumes, web mode and model agnosticism. Worth a test branch once its configuration stabilises.
+Not a replacement for agent-sandbox, but a possible replacement for the `proxy` service: run `g0efilter` with the policy directory and set `network_mode: "service:g0efilter"` on `sandbox`. This would change the design described in [networking.md](../networking.md) (no `internal` network, no proxy variables) and the `web` relay would have to reach the sandbox through the filter's namespace (not verified). We would keep the agent image, volumes, web mode and model agnosticism. Worth a test branch once its configuration stabilises.
 
 ## Sources
 

@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: Medium.** Same shape (agent in a Docker container, non-root user, default-deny egress with an allowlist), but egress is an IP-based iptables firewall inside the container, the code is bind-mounted from the host, and it is an example rather than a maintained product.
+> **Closeness to agent-sandbox: Medium.** Same shape (agent in a Docker container, non-root user, default-deny egress with an allowlist), but egress is an IP-based iptables firewall inside the container, the code is bind-mounted from the host, and it is an example rather than a maintained product.
 
 - **Project**: [anthropics/claude-code `.devcontainer/`](https://github.com/anthropics/claude-code/tree/main/.devcontainer) (Anthropic; repository `LICENSE.md`: "All rights reserved", use subject to Anthropic's Commercial Terms, so not an open-source license)
 - **Status**: Documented as "a working example rather than a maintained base image". Last change to `.devcontainer/` on 2026-06-30 (removal of `statsig.anthropic.com`); previous changes August 2025. The repository itself is very active (release v2.1.295 on 2026-10-08).
@@ -38,7 +38,7 @@ Three files: `devcontainer.json`, `Dockerfile` (`node:20`, user `node`, Claude C
 | Platforms / deployment | Any Docker host with a Dev Containers client, GitHub Codespaces. Kubernetes: not covered; `NET_ADMIN` in the pod would be needed. |
 | Observability | None: rejected packets are not logged; only the script output at start. |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - Applies to all traffic, not only tools that honour `HTTP(S)_PROXY`, and needs no proxy container.

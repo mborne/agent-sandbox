@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: Low.** A per-command OS sandbox built into the Codex agent, with an optional domain-filtering proxy; it is not a standalone self-hosted environment and is tied to Codex.
+> **Closeness to agent-sandbox: Low.** A per-command OS sandbox built into the Codex agent, with an optional domain-filtering proxy; it is not a standalone self-hosted environment and is tied to Codex.
 
 - **Project**: [openai/codex](https://github.com/openai/codex) (Apache-2.0, OpenAI). Sandbox code in `codex-rs/linux-sandbox`, `codex-rs/network-proxy`, `codex-rs/windows-sandbox-rs`.
 - **Status**: Very active. Stable release `rust-v0.162.0` on 2026-10-08, alpha releases several times a day, about 128k stars.
@@ -29,7 +29,7 @@ Codex runs every model-generated command inside an OS sandbox chosen by `sandbox
 | Platforms / deployment | Linux (bubblewrap; system `bwrap` or bundled helper; needs unprivileged user namespaces), macOS, Windows, WSL2 (not WSL1). In Docker the sandbox "may not work"; OpenAI recommends container isolation plus `--sandbox danger-full-access`. Cloud variant: Codex Cloud (SaaS). |
 | Observability | Proxy returns `403` with an `x-proxy-error` header. OTEL audit events `codex.network_proxy.policy_decision` (opt-in OTel export). `codex sandbox macos --log-denials`. |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - Finer egress policy: method-limited mode, MITM hooks on host, method and path.

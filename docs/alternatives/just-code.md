@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: High.** Same team as albert-code, opencode in a microVM with Albert API, proxy-side credential injection and a sealed workspace; but no domain allowlist and no server or web deployment.
+> **Closeness to agent-sandbox: High.** Same team as albert-code, opencode in a microVM with Albert API, proxy-side credential injection and a sealed workspace; but no domain allowlist and no server or web deployment.
 
 - **Project**: [etalab-ia/just-code](https://github.com/etalab-ia/just-code) (MIT, DINUM / IA dans l'État)
 - **Status**: experimental R&D, created 2026-09-08, very active (v0.8.1 on 2026-10-07, several releases a week), Go CLI with CI and release-please
@@ -29,7 +29,7 @@ The successor track to [albert-code](albert-code.md): a Go CLI that runs opencod
 | Platforms / deployment | macOS, Linux (KVM), Windows (Windows Hypervisor Platform); workstation tool, no server or Kubernetes mode |
 | Observability | Not verified |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**: microVM isolation (own kernel); the model API key never enters the guest; sealed workspace with a secret filter; per-project instances; Windows and macOS support; tests, releases and decision records.
 - **Worse or missing**: no domain allowlist, so the agent can reach any public host (the key is protected, the code is not); Albert-centric; workstation only (no shared server, no web UI for remote users, no Kubernetes path); requires KVM, so it does not run inside most cloud VMs without nested virtualization.

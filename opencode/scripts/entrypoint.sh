@@ -18,7 +18,7 @@ if [[ "${OPENCODE_SERVER_ENABLED:-1}" == "0" ]]; then
 fi
 
 PORT=${OPENCODE_SERVER_PORT:-4096}
-PASSWORD_FILE=${XDG_CONFIG_HOME:-$HOME/.config}/opencode-sandbox/web-password
+PASSWORD_FILE=${XDG_CONFIG_HOME:-$HOME/.config}/agent-sandbox/web-password
 
 if [[ -z "${OPENCODE_SERVER_PASSWORD:-}" ]]; then
   if [[ ! -s "$PASSWORD_FILE" ]]; then
