@@ -1,4 +1,4 @@
-# opencode-sandbox
+# agent-sandbox
 
 ![Experimental](https://img.shields.io/badge/status-EXPERIMENTAL-orange?style=for-the-badge)
 

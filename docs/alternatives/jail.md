@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: Medium.** Same tool stack (Docker + opencode, web UI included), but no network filtering and the host project and opencode credentials are bind-mounted into the container.
+> **Closeness to agent-sandbox: Medium.** Same tool stack (Docker + opencode, web UI included), but no network filtering and the host project and opencode credentials are bind-mounted into the container.
 
 - **Project**: <https://github.com/gstamp/jail> (README says MIT, but the repository has no `LICENSE` file and GitHub detects no license; single maintainer, Glen Stampoultzis)
 - **Status**: personal project, 21 commits, no releases, last commit 2026-01-16, 1 star (checked 2026-10-09). Looks inactive.
@@ -29,7 +29,7 @@
 | Platforms / deployment | Any host with Docker and Bash (Linux, macOS). Local use; no server or Kubernetes deployment. |
 | Observability | None beyond `docker logs`. |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - Very small and easy to read (one script).

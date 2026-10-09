@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: Low.** Only the agent's tools run in a sandbox; opencode itself, its credentials and its web access stay on the host, and the sandbox has no egress filtering.
+> **Closeness to agent-sandbox: Low.** Only the agent's tools run in a sandbox; opencode itself, its credentials and its web access stay on the host, and the sandbox has no egress filtering.
 
 - **Project**: <https://github.com/thisisryanswift/opencode-sandbox> (Apache-2.0 per README and `package.json`, but no `LICENSE` file and GitHub detects none; single maintainer, Ryan Swift)
 - **Status**: prototype. 3 commits, all on 2026-03-01 (last one "Stashing, done for the day"), version 0.1.0, not published to npm, no releases, 0 stars. Open tickets for end-to-end tests of the E2B and Sprites providers (checked 2026-10-09).
@@ -29,7 +29,7 @@ An opencode plugin that replaces the built-in `bash`, `read`, `write`, `edit`, `
 | Platforms / deployment | Host with Bun/opencode; Docker or Podman locally, or SaaS accounts (Daytona, E2B, Sprites). |
 | Observability | Plugin logger and TUI toasts (toasts reported as not working in an open ticket). |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - Secrets never enter the sandbox: LLM keys and provider tokens stay with the host opencode process.
@@ -48,7 +48,7 @@ An opencode plugin that replaces the built-in `bash`, `read`, `write`, `edit`, `
 
 ## Adopting it
 
-Not as a replacement. It solves a different problem (keep secrets and the host filesystem away from the agent's shell) and leaves exfiltration through the network open, both from the sandbox and from the host-side opencode. If the plugin approach is of interest, the maintained reference is Daytona's own `@daytona/opencode` plugin (Daytona only). The "secrets outside the sandbox" idea is worth noting for opencode-sandbox, where credentials are readable by the agent.
+Not as a replacement. It solves a different problem (keep secrets and the host filesystem away from the agent's shell) and leaves exfiltration through the network open, both from the sandbox and from the host-side opencode. If the plugin approach is of interest, the maintained reference is Daytona's own `@daytona/opencode` plugin (Daytona only). The "secrets outside the sandbox" idea is worth noting for agent-sandbox, where credentials are readable by the agent.
 
 ## Sources
 

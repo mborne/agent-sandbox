@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: High.** Same goal (run opencode with deny-by-default egress), stronger isolation (microVM) and credential handling, but closed source, local-machine oriented and without a web UI.
+> **Closeness to agent-sandbox: High.** Same goal (run opencode with deny-by-default egress), stronger isolation (microVM) and credential handling, but closed source, local-machine oriented and without a web UI.
 
 - **Project**: <https://docs.docker.com/ai/sandboxes/>, binaries in [docker/sbx-releases](https://github.com/docker/sbx-releases) (proprietary, "Copyright Docker Inc. All rights reserved"; free to use including commercially; Docker Inc.)
 - **Status**: active, fast-moving. Stable `v0.47.0` on 2026-10-05, `v0.48.0-rc4` on 2026-10-08. Still a 0.x CLI. Cloud sandboxes and upstream proxy support are marked experimental.
@@ -29,11 +29,11 @@
 | Platforms / deployment | macOS 14+ (Apple silicon), Windows 11 (x86-64), Ubuntu 24.04+ (x86-64, Arm) with KVM. No Docker Desktop or Docker Engine needed. Headless Linux is supported (FAQ). Requires a Docker sign-in. No Kubernetes deployment documented. Cloud sandboxes: Docker SaaS, pay-as-you-go. |
 | Observability | `sbx policy log` lists allowed and blocked hosts per sandbox, matching rule and proxy path (`--json`). Audit logs only with paid org governance. CLI telemetry on by default (`SBX_NO_TELEMETRY` to disable). |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - Kernel isolation (microVM) instead of a shared host kernel ([../docker-hardening.md](../docker-hardening.md)).
-  - API keys never enter the sandbox; opencode-sandbox stores them on a volume readable by the agent ([../model-provider.md](../model-provider.md), [../github.md](../github.md)).
+  - API keys never enter the sandbox; agent-sandbox stores them on a volume readable by the agent ([../model-provider.md](../model-provider.md), [../github.md](../github.md)).
   - Egress covers all TCP, not only proxy-aware tools; DNS is filtered; rules can use ports, CIDR, HTTP method and path ([../networking.md](../networking.md) filters by domain only).
   - Interactive approval of new destinations; private Docker Engine for the agent.
   - Maintained by Docker, many agent templates.
@@ -43,7 +43,7 @@
   - No Kubernetes path ([../portability.md](../portability.md)); Linux support limited to Ubuntu 24.04+ with KVM (a cloud VM needs nested virtualization, not verified per provider).
   - OpenCode user-level config not available, which affects a global `~/.config/opencode/opencode.json` setup such as `setup-albert`.
   - Albert API is not a built-in secret; a custom secret should work but is not verified.
-  - Default `sbx run` mounts the host directory read-write (opencode-sandbox clones inside the container).
+  - Default `sbx run` mounts the host directory read-write (agent-sandbox clones inside the container).
 - **Same idea**:
   - One isolated environment per agent, deny-by-default egress through a host-side proxy with an allowlist.
   - Persistent state across restarts, logs of every destination.

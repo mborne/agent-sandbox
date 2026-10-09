@@ -3,7 +3,7 @@
 > [!WARNING]
 > **AI-generated, not reviewed.** This page was written by an AI coding assistant ([Claude Code](https://claude.com/claude-code)) from web research on 2026-10-09. It has not been reviewed or validated by a human: check the sources before relying on it.
 
-> **Closeness to opencode-sandbox: Low.** A Kubernetes egress sidecar with credential injection, not a sandbox: it only covers the network part, only on Kubernetes, and needs TLS interception for HTTPS.
+> **Closeness to agent-sandbox: Low.** A Kubernetes egress sidecar with credential injection, not a sandbox: it only covers the network part, only on Kubernetes, and needs TLS interception for HTTPS.
 
 - **Project**: <https://github.com/reoring/botbox> (MIT, individual maintainer `reoring`)
 - **Status**: early. 26 commits between 2026-02-10 and 2026-02-12, no release, no published image (build it yourself), about 13 stars. No activity since 2026-02-12 (checked 2026-10-09).
@@ -29,7 +29,7 @@ BotBox is a Rust proxy that runs as a sidecar in the agent's pod. An init contai
 | Platforms / deployment | Kubernetes only (init container with `NET_ADMIN`, native sidecar). Quick start on kind. Plain Docker use is not documented. |
 | Observability | Structured logs per request (allowed or denied), Prometheus metrics. |
 
-## Compared with opencode-sandbox
+## Compared with agent-sandbox
 
 - **Better**:
   - Credential injection at the network boundary: API keys never enter the agent container.
@@ -48,7 +48,7 @@ BotBox is a Rust proxy that runs as a sidecar in the agent's pod. An init contai
 
 ## Adopting it
 
-BotBox cannot replace opencode-sandbox: it would at most replace Squid in the Kubernetes design of [portability.md](../portability.md), and only if we accept TLS interception. We would keep everything else (image, volumes, web mode) and lose the Docker Compose path for that component. Given its inactivity, its credential-injection design is more useful as a reference than as a dependency.
+BotBox cannot replace agent-sandbox: it would at most replace Squid in the Kubernetes design of [portability.md](../portability.md), and only if we accept TLS interception. We would keep everything else (image, volumes, web mode) and lose the Docker Compose path for that component. Given its inactivity, its credential-injection design is more useful as a reference than as a dependency.
 
 ## Sources
 
