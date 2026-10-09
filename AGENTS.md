@@ -7,7 +7,7 @@ Docker sandbox that runs the opencode agent behind a Squid proxy with a domain a
 Write everything in the repository in **English**, even when the conversation is in another language:
 
 - Code: identifiers, file names, log and error messages, prompts shown by scripts.
-- Comments, in every file type (shell, Dockerfile, YAML, Squid config).
+- Comments, in every file type (shell, Dockerfile, YAML, Squid and nginx config).
 - Documentation: `README.md`, `docs/`, this file.
 - Commit messages and pull request descriptions.
 
