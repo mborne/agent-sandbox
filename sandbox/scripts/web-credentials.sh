@@ -6,18 +6,18 @@
 #   docker compose exec sandbox web-credentials --password   # password only
 set -euo pipefail
 
-PORT=${OPENCODE_SERVER_PORT:-4096}
-USERNAME=${OPENCODE_SERVER_USERNAME:-opencode}
+PORT=${SANDBOX_SERVER_PORT:-4096}
+USERNAME=${SANDBOX_SERVER_USERNAME:-$SANDBOX_IMAGE}
 PASSWORD_FILE=${XDG_CONFIG_HOME:-$HOME/.config}/agent-sandbox/web-password
 
-if [[ "${OPENCODE_SERVER_ENABLED:-1}" == "0" ]]; then
-  echo "Web UI disabled (OPENCODE_SERVER_ENABLED=0)" >&2
+if [[ "${SANDBOX_SERVER_ENABLED:-1}" == "0" ]]; then
+  echo "Web UI disabled (SANDBOX_SERVER_ENABLED=0)" >&2
   exit 1
 fi
 
 # Same precedence as the entrypoint: chosen password first, then generated one
-if [[ -n "${OPENCODE_SERVER_PASSWORD:-}" ]]; then
-  password=$OPENCODE_SERVER_PASSWORD
+if [[ -n "${SANDBOX_SERVER_PASSWORD:-}" ]]; then
+  password=$SANDBOX_SERVER_PASSWORD
 elif [[ -s "$PASSWORD_FILE" ]]; then
   password=$(<"$PASSWORD_FILE")
 else

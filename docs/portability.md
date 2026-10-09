@@ -7,26 +7,28 @@ The sandbox relies on a simple principle: **the agent has no route to the Intern
 - `HTTP(S)_PROXY` variables so that tools use the proxy, tools that ignore them simply fail to connect;
 - persistent volumes for configuration and code.
 
-This page describes two ways to reuse it: running another coding agent, and moving to Kubernetes. Neither is implemented in this repository.
+This page describes two ways to reuse it: running another coding agent, and moving to Kubernetes. Claude Code is implemented as a second image ([Choose the agent](../README.md#choose-the-agent)); other agents and Kubernetes are not.
 
 ## Other coding agents
 
 ### Checklist
 
-To run another agent (Claude Code, Codex CLI, Gemini CLI, Aider…) in the same sandbox:
+To run another agent (Codex CLI, Gemini CLI, Aider…) in the same sandbox, the way the `claude` image does:
 
-1. **Install it** in [opencode/Dockerfile](../opencode/Dockerfile). The build runs outside the sandbox network, so install scripts and package registries are reachable at that point.
+1. **Install it** in a new target of [sandbox/Dockerfile](../sandbox/Dockerfile) (`FROM base AS <name>`), selected with `SANDBOX_IMAGE=<name>`. The build runs outside the sandbox network, so install scripts and package registries are reachable at that point. For web mode, add a `sandbox-server` script that listens on `SANDBOX_SERVER_PORT` with `SANDBOX_SERVER_USERNAME` and `SANDBOX_SERVER_PASSWORD` (see [server-claude.sh](../sandbox/scripts/server-claude.sh)).
 2. **Allow its domains** in [squid/allowed-domains.txt](../squid/allowed-domains.txt): the model API and, if it uses one, the login endpoint. Telemetry or update domains can stay denied; the agent should keep working without them. Watch `docker compose logs -f proxy` for `TCP_DENIED` on the first runs to find what is missing.
 3. **Check proxy support**: the agent must honor `HTTPS_PROXY`. Node.js-based agents also need `NODE_USE_ENV_PROXY=1`, already set in [compose.yaml](../compose.yaml).
 4. **Persist its configuration**: only `~/.config`, `~/.local` and `~/workspace` are on named volumes. An agent that stores credentials elsewhere (for example `~/.claude`) needs an extra volume or a variable pointing to one of these directories.
 
 ### Claude Code
 
-[Claude Code](https://code.claude.com/docs/en/overview) fits without network changes: `.anthropic.com` (API) and `.claude.ai` (login) are already in [squid/allowed-domains.txt](../squid/allowed-domains.txt), and it honors `HTTPS_PROXY`.
+[Claude Code](https://code.claude.com/docs/en/overview) is the `claude` target of [sandbox/Dockerfile](../sandbox/Dockerfile) (`SANDBOX_IMAGE=claude`). How it applies the checklist:
 
-- Install: `npm install -g @anthropic-ai/claude-code` as root in the Dockerfile (before `USER ubuntu`). The native installer (`claude.ai/install.sh`) writes to `~/.local`, which the `opencode-local` volume hides once it exists.
-- Configuration: stored in `~/.claude` and `~/.claude.json` by default. Set `CLAUDE_CONFIG_DIR=/home/ubuntu/.config/claude` in [compose.yaml](../compose.yaml) to keep it on the `opencode-config` volume.
-- Run: `docker compose exec sandbox claude`.
+- Install: `npm install -g @anthropic-ai/claude-code` as root. The native installer (`claude.ai/install.sh`) writes to `~/.local`, which the `opencode-local` volume hides once it exists. The auto-updater is disabled (`DISABLE_AUTOUPDATER=1`): rebuild the image to update.
+- Domains: `.anthropic.com` (API, feature flags), `.claude.ai` (claude.ai login) and `platform.claude.com` (OAuth token exchange and refresh, for Console and claude.ai accounts) are in [squid/allowed-domains.txt](../squid/allowed-domains.txt). Optional telemetry (`*.datadoghq.com`) stays denied. See the [network access requirements](https://code.claude.com/docs/en/network-config#network-access-requirements).
+- Proxy: honors `HTTPS_PROXY`.
+- Configuration: `CLAUDE_CONFIG_DIR=/home/ubuntu/.config/claude` keeps `~/.claude` and `~/.claude.json` on the `opencode-config` volume.
+- Web mode: ttyd serves the terminal UI on port 4096 ([web-mode.md](web-mode.md#claude-code)).
 
 ### Other agents
 
@@ -34,13 +36,13 @@ Their domains are **not** in the allowlist. For example, an agent using the Open
 
 ## Kubernetes, web mode
 
-The same architecture maps to Kubernetes, with the agent exposed through a web UI instead of `docker compose exec` (`opencode serve`, already usable locally, see [web-mode.md](web-mode.md)). This makes the sandbox usable from a browser, one pod per user, without Docker on the user's machine.
+The same architecture maps to Kubernetes, with the agent exposed through a web UI instead of `docker compose exec` (`opencode serve` or ttyd, already usable locally, see [web-mode.md](web-mode.md)). This makes the sandbox usable from a browser, one pod per user, without Docker on the user's machine.
 
 ### Mapping
 
 | Docker Compose | Kubernetes |
 | -------------- | ---------- |
-| `sandbox` service | Deployment (or StatefulSet) running the same image (web mode, password from a Secret in `OPENCODE_SERVER_PASSWORD`), exposed through a Service and an Ingress |
+| `sandbox` service | Deployment (or StatefulSet) running the same image (web mode, password from a Secret in `SANDBOX_SERVER_PASSWORD`), exposed through a Service and an Ingress |
 | `proxy` service | Deployment running Squid, Service on port 3128 |
 | `web` relay (nginx) | Ingress controller |
 | `squid.conf`, `allowed-domains.txt` | ConfigMap mounted read-only in the proxy pod |
@@ -77,7 +79,7 @@ spec:
         - namespaceSelector:
             matchLabels: { kubernetes.io/metadata.name: ingress-nginx }
       ports:
-        - { protocol: TCP, port: 4096 } # opencode serve port
+        - { protocol: TCP, port: 4096 } # web UI port
   egress:
     - to:
         - podSelector:
@@ -126,7 +128,7 @@ spec:
         - { protocol: TCP, port: 53 }
 ```
 
-Labels, the ingress controller namespace and the opencode port depend on the deployment; adapt them.
+Labels, the ingress controller namespace and the web UI port depend on the deployment; adapt them.
 
 ### Points of attention
 
