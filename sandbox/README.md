@@ -30,6 +30,7 @@ Common to both targets (`base`):
 - `gh` from the official GitHub CLI apt repository.
 - Node.js with `npm` and `npx`, for local MCP servers and `npx skills add`. Global `npm install -g` fails at runtime (`/usr/local` is owned by root): use `npx -y`.
 - `uv` and `uvx` for Python tools, using the system `python3`.
+- [code-server](https://github.com/coder/code-server) (VS Code in the browser), deb package from the GitHub releases, served with `SANDBOX_SERVER=vscode`, see [docs/vscode.md](../docs/vscode.md).
 - No SSH client: repositories are cloned over HTTPS (port 22 is blocked by the proxy anyway).
 
 | Target     | Agent install                                                                                   | Specific settings                                                                                                         |
@@ -43,9 +44,10 @@ Copied from [scripts/](scripts/) to `/usr/local/bin`:
 
 | Command              | Source                                                 | Targets    | Role                                                                                         |
 | -------------------- | ------------------------------------------------------ | ---------- | -------------------------------------------------------------------------------------------- |
-| `sandbox-entrypoint` | [entrypoint.sh](scripts/entrypoint.sh)                 | all        | `ENTRYPOINT`: resolves the web password, then runs `sandbox-server`, or stays idle if `SANDBOX_SERVER_ENABLED=0` |
+| `sandbox-entrypoint` | [entrypoint.sh](scripts/entrypoint.sh)                 | all        | `ENTRYPOINT`: resolves the web password, then runs `sandbox-server` (or `sandbox-server-vscode` if `SANDBOX_SERVER=vscode`), or stays idle if `SANDBOX_SERVER_ENABLED=0` |
 | `sandbox-server`     | [server-opencode.sh](scripts/server-opencode.sh)       | `opencode` | `opencode serve` on `SANDBOX_SERVER_PORT`                                                    |
 | `sandbox-server`     | [server-claude.sh](scripts/server-claude.sh)           | `claude`   | ttyd serving `claude`, one process per browser tab, repository given with `?arg=<repo>`      |
+| `sandbox-server-vscode` | [server-vscode.sh](scripts/server-vscode.sh)        | all        | code-server on `SANDBOX_SERVER_PORT`, opening `~/workspace`                                  |
 | `web-credentials`    | [web-credentials.sh](scripts/web-credentials.sh)       | all        | Prints the web UI URL, user and password                                                     |
 | `setup-github`       | [setup-github.sh](scripts/setup-github.sh)             | all        | GitHub token for `gh` and `git`, see [docs/github.md](../docs/github.md)                     |
 | `setup-albert`       | [setup-albert.sh](scripts/setup-albert.sh)             | `opencode` | Albert API provider for opencode, see [docs/model-provider.md](../docs/model-provider.md)    |
@@ -68,6 +70,7 @@ Anything installed under these paths at build time is hidden once the volume is 
 | --------------------- | -------- | ---------- | --------------------------------------------------------- |
 | `NODE_VERSION`        | `24`     | `node`     | Tag of the official `node` image (major version)          |
 | `UV_VERSION`          | `latest` | `uv`       | Tag of the official `ghcr.io/astral-sh/uv` image          |
+| `CODE_SERVER_VERSION` | latest   | `base`     | code-server release, e.g. `4.141.0`                       |
 | `OPENCODE_VERSION`    | latest   | `opencode` | opencode release, e.g. `1.18.35`                          |
 | `CLAUDE_CODE_VERSION` | latest   | `claude`   | `@anthropic-ai/claude-code` npm version, e.g. `2.1.295`   |
 
@@ -81,7 +84,7 @@ Set by the image:
 | `CLAUDE_CONFIG_DIR`   | `/home/ubuntu/.config/claude` | `claude` only                                    |
 | `DISABLE_AUTOUPDATER` | `1`                           | `claude` only                                    |
 
-Read at runtime (set in [compose.yaml](../compose.yaml)): `SANDBOX_SERVER_ENABLED`, `SANDBOX_SERVER_USERNAME`, `SANDBOX_SERVER_PASSWORD`, `SANDBOX_SERVER_PORT` (default `4096`), see [docs/web-mode.md](../docs/web-mode.md); `HTTP(S)_PROXY`, `NO_PROXY` and `NODE_USE_ENV_PROXY`, see [docs/networking.md](../docs/networking.md).
+Read at runtime (set in [compose.yaml](../compose.yaml)): `SANDBOX_SERVER` (see [docs/vscode.md](../docs/vscode.md)), `SANDBOX_SERVER_ENABLED`, `SANDBOX_SERVER_USERNAME`, `SANDBOX_SERVER_PASSWORD`, `SANDBOX_SERVER_PORT` (default `4096`), see [docs/web-mode.md](../docs/web-mode.md); `HTTP(S)_PROXY`, `NO_PROXY` and `NODE_USE_ENV_PROXY`, see [docs/networking.md](../docs/networking.md).
 
 ## Build
 
@@ -100,7 +103,7 @@ docker build --target opencode -t agent-sandbox-opencode sandbox
 docker build --target claude -t agent-sandbox-claude sandbox
 ```
 
-The build runs on the host network, outside the sandbox: it reaches Docker Hub, `ghcr.io`, the Ubuntu archive, `cli.github.com`, the opencode install script and its downloads, or `registry.npmjs.org` directly, whatever [squid/allowed-domains.txt](../squid/allowed-domains.txt) contains. The allowlist only applies to the running container.
+The build runs on the host network, outside the sandbox: it reaches Docker Hub, `ghcr.io`, the Ubuntu archive, `cli.github.com`, the code-server install script and its GitHub release, the opencode install script and its downloads, or `registry.npmjs.org` directly, whatever [squid/allowed-domains.txt](../squid/allowed-domains.txt) contains. The allowlist only applies to the running container.
 
 > [!WARNING]
 > Run outside of Compose, the image has no proxy and no isolated network: the agent gets direct Internet access. Use it through [compose.yaml](../compose.yaml).

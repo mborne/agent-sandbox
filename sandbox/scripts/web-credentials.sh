@@ -28,5 +28,10 @@ fi
 if [[ "${1:-}" == "--password" ]]; then
   printf '%s\n' "$password"
 else
-  printf 'URL:      http://127.0.0.1:%s\nUser:     %s\nPassword: %s\n' "$PORT" "$USERNAME" "$password"
+  printf 'URL:      http://127.0.0.1:%s\n' "$PORT"
+  # code-server only asks for the password
+  if [[ "${SANDBOX_SERVER:-}" != "vscode" ]]; then
+    printf 'User:     %s\n' "$USERNAME"
+  fi
+  printf 'Password: %s\n' "$password"
 fi

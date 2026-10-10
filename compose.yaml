@@ -8,8 +8,10 @@ services:
     # Web mode: the image's web UI on port 4096 (see docs/web-mode.md); the CLI also
     # works with `docker compose exec sandbox opencode` (or `claude`).
     # Password: SANDBOX_SERVER_PASSWORD (e.g. in .env), otherwise generated; read it with `web-credentials`.
+    # SANDBOX_SERVER=vscode serves VS Code (code-server) instead (see docs/vscode.md)
     # SANDBOX_SERVER_ENABLED=0 disables web mode (the container stays idle)
     environment:
+      SANDBOX_SERVER: ${SANDBOX_SERVER:-}
       SANDBOX_SERVER_ENABLED: ${SANDBOX_SERVER_ENABLED:-1}
       SANDBOX_SERVER_USERNAME: ${SANDBOX_SERVER_USERNAME:-}
       SANDBOX_SERVER_PASSWORD: ${SANDBOX_SERVER_PASSWORD:-}
