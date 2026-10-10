@@ -2,6 +2,8 @@
 # with SANDBOX_IMAGE:
 #   opencode  opencode CLI (https://opencode.ai), web UI with `opencode serve`
 #   claude    Claude Code CLI (https://code.claude.com), web UI with ttyd
+# Both include VS Code in the browser (code-server), served instead of the
+# agent web UI with SANDBOX_SERVER=vscode.
 #
 #   docker compose up -d --build                        # opencode (default)
 #   SANDBOX_IMAGE=claude docker compose up -d --build
@@ -41,11 +43,19 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
 # uv and uvx for Python tools; python3 above avoids downloading an interpreter at runtime
 COPY --from=uv /uv /uvx /usr/local/bin/
 
+# VS Code in the browser (code-server), deb package from the GitHub releases.
+# Empty = latest release, otherwise e.g. "4.141.0"
+ARG CODE_SERVER_VERSION=""
+RUN curl -fsSL https://code-server.dev/install.sh \
+    | sh -s -- ${CODE_SERVER_VERSION:+--version "$CODE_SERVER_VERSION"} \
+ && rm -rf /root/.cache
+
 # Setup helper, run with `docker compose exec sandbox setup-github`
 COPY --chmod=755 scripts/setup-github.sh /usr/local/bin/setup-github
 # Container main process: web mode (the target's sandbox-server) or idle
 COPY --chmod=755 scripts/entrypoint.sh /usr/local/bin/sandbox-entrypoint
 COPY --chmod=755 scripts/web-credentials.sh /usr/local/bin/web-credentials
+COPY --chmod=755 scripts/server-vscode.sh /usr/local/bin/sandbox-server-vscode
 
 # Run as the image's default unprivileged user (uid 1000)
 USER ubuntu

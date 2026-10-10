@@ -19,6 +19,7 @@ A container for running a coding agent, [opencode](https://opencode.ai) or [Clau
 - **MCP servers**: recommended remote servers for French public data (`datagouv`, `geocontext`, `insee`). → [docs/mcp.md](docs/mcp.md)
 - **Agent skills**: where opencode looks for skills, recommended skills ([etalab-ia/skills](https://github.com/etalab-ia/skills)). → [docs/skills.md](docs/skills.md)
 - **Web mode**: browser UI on `127.0.0.1:4096` (`opencode serve`, or the Claude Code terminal UI served by ttyd), on by default (`SANDBOX_SERVER_ENABLED=0` to disable), password generated on first start, through a relay that keeps the sandbox on its internal network. → [docs/web-mode.md](docs/web-mode.md)
+- **VS Code in the browser**: `SANDBOX_SERVER=vscode` serves [code-server](https://github.com/coder/code-server) instead of the agent web UI, on the same port and password; the agent runs in its terminal. → [docs/vscode.md](docs/vscode.md)
 - **Portable approach**: the sandboxing mechanism (isolated network, Squid allowlist, persistent volumes) does not depend on the agent or Docker Compose. The same setup can run other coding agents, or move to Kubernetes in web mode with NetworkPolicies forcing traffic through the proxy. → [docs/portability.md](docs/portability.md)
 - **Persistent configuration**: providers, tokens, skills and cloned repositories live on named volumes and survive container recreation (see [Architecture](#architecture)).
 
@@ -33,9 +34,9 @@ A container for running a coding agent, [opencode](https://opencode.ai) or [Clau
 
 | Service   | Role                                                                                                                                                                                                                                   |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sandbox` | Image built from [sandbox/Dockerfile](sandbox/Dockerfile), target chosen by `SANDBOX_IMAGE` (Ubuntu 24.04, `git`, `gh`, `jq`, `ripgrep`, Node.js with `npm`/`npx`, Python 3 with `uv`/`uvx`, setup scripts; plus the opencode CLI or Claude Code and ttyd), see [sandbox/README.md](sandbox/README.md). Runs as the unprivileged user `ubuntu` (uid 1000). Working directory: `/home/ubuntu/workspace`. |
+| `sandbox` | Image built from [sandbox/Dockerfile](sandbox/Dockerfile), target chosen by `SANDBOX_IMAGE` (Ubuntu 24.04, `git`, `gh`, `jq`, `ripgrep`, Node.js with `npm`/`npx`, Python 3 with `uv`/`uvx`, code-server, setup scripts; plus the opencode CLI or Claude Code and ttyd), see [sandbox/README.md](sandbox/README.md). Runs as the unprivileged user `ubuntu` (uid 1000). Working directory: `/home/ubuntu/workspace`. |
 | `proxy`   | Squid, the only way out to the Internet. Filters domains using [squid/allowed-domains.txt](squid/allowed-domains.txt).                                                                                                                 |
-| `web`     | nginx relay publishing the sandbox web UI (web mode) on `127.0.0.1:4096`, see [docs/web-mode.md](docs/web-mode.md).                                                                                                    |
+| `web`     | nginx relay publishing the sandbox web UI (web mode, or VS Code) on `127.0.0.1:4096`, see [docs/web-mode.md](docs/web-mode.md).                                                                                        |
 
 - The `agent` network is `internal`: the `sandbox` container has **no direct Internet access**, everything goes through `proxy:3128` (`HTTP(S)_PROXY` variables). See [docs/networking.md](docs/networking.md) for the diagram and filtering rules.
 - Only ports 80 and 443 are allowed: **no SSH**, repositories are cloned over HTTPS.
@@ -91,6 +92,8 @@ docker compose exec sandbox web-credentials
 
 Open <http://127.0.0.1:4096> and log in. With opencode, pick the repository among the projects under `/home/ubuntu/workspace`. With Claude Code, give the repository in the URL: `http://127.0.0.1:4096/?arg=<repo>` (each browser tab starts its own `claude` process). Password management, the relay and the security model are described in [docs/web-mode.md](docs/web-mode.md).
 
+To work in VS Code in the browser instead, with the agent in its terminal, set `SANDBOX_SERVER=vscode` (in `.env` or the environment) and run `docker compose up -d`: code-server then replaces the agent web UI on the same port, with the same password (see [docs/vscode.md](docs/vscode.md)).
+
 ### CLI usage
 
 Run the terminal UI in the repository:
@@ -143,6 +146,7 @@ See [docs/github.md](docs/github.md).
 | Pin an opencode version                                                         | `docker compose build --build-arg OPENCODE_VERSION=1.18.35 sandbox` |
 | Update or pin Claude Code (auto-update is disabled in the image)                | `SANDBOX_IMAGE=claude docker compose build --no-cache sandbox` or `--build-arg CLAUDE_CODE_VERSION=2.1.295` |
 | Pin the Node.js major version or the uv version                                 | `docker compose build --build-arg NODE_VERSION=22 --build-arg UV_VERSION=0.12.24 sandbox` |
+| Pin the code-server version                                                     | `docker compose build --build-arg CODE_SERVER_VERSION=4.141.0 sandbox` |
 | Stop the stack                                                                  | `docker compose down`                                               |
 | Remove everything, including cloned repositories, configuration and credentials | `docker compose down -v`                                            |
 
@@ -161,6 +165,7 @@ See [docs/github.md](docs/github.md).
 - [Sandbox image](sandbox/README.md): build stages, content, build arguments
 - [Network architecture](docs/networking.md)
 - [Web mode](docs/web-mode.md)
+- [VS Code in the browser](docs/vscode.md)
 - [Docker hardening](docs/docker-hardening.md)
 - [Portability](docs/portability.md)
 - [Model provider](docs/model-provider.md)
