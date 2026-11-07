@@ -85,7 +85,7 @@ flowchart LR
     sandbox -->|"HTTP(S)_PROXY"| proxy["proxy (Squid)"]
 ```
 
-- The relay only forwards inbound requests to `sandbox:4096`. Outbound traffic from the sandbox still goes through the Squid proxy and its allowlist; the relay does not give the sandbox a way out.
+- The relay only forwards inbound requests to `sandbox:4096`. Outbound traffic from the sandbox still goes through the Squid proxy; the relay does not give the sandbox a way out.
 - The port is published on the host **loopback only** (`127.0.0.1:4096`): it is not reachable from other machines.
 - The web UI is served from the image (opencode itself, ttyd and its bundled page, or code-server); no extra domain is needed in [squid/allowed-domains.txt](../squid/allowed-domains.txt).
 - The relay keeps WebSocket and server-sent events connections open (`proxy_buffering off`, long read timeout) for live session updates.

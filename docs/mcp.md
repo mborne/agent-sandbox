@@ -18,7 +18,7 @@ docker compose exec sandbox opencode mcp add geocontext --url https://geollm.bet
 docker compose exec sandbox opencode mcp add insee --url https://mcpdiffusion.lab.sspcloud.fr/mcp
 ```
 
-`insee` also needs its domain in the proxy allowlist (`datagouv` and `geocontext` are covered by `.gouv.fr` and `.ign.fr`):
+In `strict` proxy mode, `insee` also needs its domain in the allowlist (`datagouv` and `geocontext` are covered by `.gouv.fr` and `.ign.fr`):
 
 ```bash
 echo mcpdiffusion.lab.sspcloud.fr >> squid/allowed-domains.txt
@@ -31,4 +31,4 @@ Check the connection:
 docker compose exec sandbox opencode mcp list
 ```
 
-A server that fails to connect is usually blocked by the proxy: look for `TCP_DENIED` in `docker compose logs proxy`.
+In `strict` mode, a server that fails to connect is usually blocked by the proxy: look for `TCP_DENIED` in `docker compose logs proxy`.

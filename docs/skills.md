@@ -20,9 +20,9 @@ The main source is [etalab-ia/skills](https://github.com/etalab-ia/skills): skil
 docker compose exec sandbox npx -y skills add etalab-ia/skills -a opencode -g
 ```
 
-Node.js is in the image and GitHub is in the allowlist. Add `--skill <name>` to install a single skill.
+Node.js is in the image and GitHub is in the `strict` mode allowlist. Add `--skill <name>` to install a single skill.
 
-Also useful: `insee-public-data` from [InseeFrLab/opencode-onyxia](https://github.com/InseeFrLab/opencode-onyxia) (INSEE MELODI and metadata APIs, `pynsee`). It targets the [Onyxia](https://www.onyxia.sh/) platform, so some instructions do not apply in the sandbox, and its APIs are on `.insee.fr`, already in [squid/allowed-domains.txt](../squid/allowed-domains.txt).
+Also useful: `insee-public-data` from [InseeFrLab/opencode-onyxia](https://github.com/InseeFrLab/opencode-onyxia) (INSEE MELODI and metadata APIs, `pynsee`). It targets the [Onyxia](https://www.onyxia.sh/) platform, so some instructions do not apply in the sandbox, and its APIs are on `.insee.fr`, already in [squid/allowed-domains.txt](../squid/allowed-domains.txt) for `strict` mode.
 
 There is no official IGN skill yet: for the Géoplateforme, use the [geocontext MCP server](mcp.md#recommended-servers).
 
