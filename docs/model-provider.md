@@ -1,6 +1,6 @@
 # Model provider
 
-opencode needs a model provider (Claude Code uses Anthropic, see [below](#claude-code)). Its domain must be in [squid/allowed-domains.txt](../squid/allowed-domains.txt) (`.anthropic.com` and `.gouv.fr` already are).
+opencode needs a model provider (Claude Code uses Anthropic, see [below](#claude-code)). In `strict` proxy mode, its domain must be in [squid/allowed-domains.txt](../squid/allowed-domains.txt) (`.anthropic.com` and `.gouv.fr` already are).
 
 ## Albert API: `setup-albert`
 
@@ -44,4 +44,4 @@ Claude Code (`vscode` and `claude` images, [Choose the image](../README.md#choos
 docker compose exec -it sandbox claude
 ```
 
-Credentials are kept in `~/.config/claude` (`CLAUDE_CONFIG_DIR`, `opencode-config` volume). The required domains are in [squid/allowed-domains.txt](../squid/allowed-domains.txt), see [portability.md](portability.md#claude-code). `setup-albert` only configures opencode: Albert exposes an OpenAI-compatible API, not the Anthropic one.
+Credentials are kept in `~/.config/claude` (`CLAUDE_CONFIG_DIR`, `opencode-config` volume). The domains required in `strict` mode are in [squid/allowed-domains.txt](../squid/allowed-domains.txt), see [portability.md](portability.md#claude-code). `setup-albert` only configures opencode: Albert exposes an OpenAI-compatible API, not the Anthropic one.

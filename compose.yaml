@@ -35,9 +35,14 @@ services:
 
   proxy:
     image: ubuntu/squid:latest
+    # SANDBOX_PROXY_MODE: audit (default, ports 80/443 only, any destination)
+    # or strict (also limited to squid/allowed-domains.txt), see docs/networking.md
+    environment:
+      SANDBOX_PROXY_MODE: ${SANDBOX_PROXY_MODE:-audit}
+    entrypoint: ["bash", "/etc/squid/sandbox/entrypoint.sh"]
+    command: ["-f", "/etc/squid/sandbox/squid.conf", "-NYC"]
     volumes:
-      - ./squid/squid.conf:/etc/squid/squid.conf:ro
-      - ./squid/allowed-domains.txt:/etc/squid/allowed-domains.txt:ro
+      - ./squid:/etc/squid/sandbox:ro
     networks:
       - agent
       - egress
