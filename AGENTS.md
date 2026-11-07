@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Docker sandbox that runs a coding agent (opencode or Claude Code, one image per tool, selected with `SANDBOX_IMAGE`) behind a Squid proxy with a domain allowlist. See [README.md](README.md) for the layout and [docs/](docs/) for details.
+Docker sandbox that runs a coding agent (opencode or Claude Code; images `vscode` (VS Code with both, default), `opencode` and `claude`, selected with `SANDBOX_IMAGE`) behind a Squid proxy with a domain allowlist. See [README.md](README.md) for the layout and [docs/](docs/) for details.
 
 ## Language
 

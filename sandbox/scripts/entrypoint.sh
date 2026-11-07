@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Main process of the sandbox container (ENTRYPOINT of every image): web mode,
 # the image's `sandbox-server` on port 4096, reached from the host through the
-# "web" relay (see docs/web-mode.md). The CLI still works alongside.
+# "web" relay (see docs/web-mode.md): code-server in the vscode image,
+# `opencode serve` or ttyd in the agent images. The CLI still works alongside.
 #
-#   docker compose up -d
+#   docker compose up -d                            # vscode image (default)
 #   docker compose exec sandbox web-credentials     # URL, user and password
+#   SANDBOX_IMAGE=opencode docker compose up -d     # agent web UI instead of VS Code
 #   SANDBOX_SERVER_ENABLED=0 docker compose up -d   # CLI only, stay idle
 #
 # Password: SANDBOX_SERVER_PASSWORD if set (e.g. in .env), otherwise generated
@@ -13,7 +15,7 @@
 set -euo pipefail
 
 if [[ "${SANDBOX_SERVER_ENABLED:-1}" == "0" ]]; then
-  echo "Web UI disabled (SANDBOX_SERVER_ENABLED=0): use 'docker compose exec sandbox ${SANDBOX_IMAGE:-bash}'"
+  echo "Web UI disabled (SANDBOX_SERVER_ENABLED=0): use 'docker compose exec sandbox bash'"
   exec tail -f /dev/null
 fi
 

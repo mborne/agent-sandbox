@@ -38,7 +38,7 @@ docker compose exec sandbox opencode auth login
 
 ## Claude Code
 
-The `claude` image ([Choose the agent](../README.md#choose-the-agent)) uses the Anthropic API. Log in on first run, with a claude.ai account or an Anthropic Console account (API key):
+Claude Code (`vscode` and `claude` images, [Choose the image](../README.md#choose-the-image)) uses the Anthropic API. Log in on first run, with a claude.ai account or an Anthropic Console account (API key), from the CLI or the VS Code extension (same configuration):
 
 ```bash
 docker compose exec -it sandbox claude

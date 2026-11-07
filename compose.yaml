@@ -1,12 +1,13 @@
 services:
   sandbox:
-    # SANDBOX_IMAGE selects the tool (Dockerfile target): opencode (default) or claude
+    # SANDBOX_IMAGE selects the image (Dockerfile target) and so the web UI:
+    # vscode (default, VS Code with both agents), opencode or claude (agent web UI)
     build:
       context: ./sandbox
-      target: ${SANDBOX_IMAGE:-opencode}
-    image: agent-sandbox-${SANDBOX_IMAGE:-opencode}
-    # Web mode: the image's web UI on port 4096 (see docs/web-mode.md); the CLI also
-    # works with `docker compose exec sandbox opencode` (or `claude`).
+      target: ${SANDBOX_IMAGE:-vscode}
+    image: agent-sandbox-${SANDBOX_IMAGE:-vscode}
+    # Web mode: the image's web UI on port 4096 (see docs/web-mode.md); the CLI
+    # also works with `docker compose exec sandbox opencode` (or `claude`).
     # Password: SANDBOX_SERVER_PASSWORD (e.g. in .env), otherwise generated; read it with `web-credentials`.
     # SANDBOX_SERVER_ENABLED=0 disables web mode (the container stays idle)
     environment:

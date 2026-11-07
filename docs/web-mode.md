@@ -1,24 +1,25 @@
 # Web mode
 
-Instead of the terminal UI ([CLI usage](../README.md#cli-usage)), the agent can be used from a browser on the host, at <http://127.0.0.1:4096>. Each image ([Choose the agent](../README.md#choose-the-agent)) serves its own web UI on port 4096:
+Instead of the terminal UI ([CLI usage](../README.md#cli-usage)), the agent can be used from a browser on the host, at <http://127.0.0.1:4096>. Each image serves one web UI on port 4096, so `SANDBOX_IMAGE` ([Choose the image](../README.md#choose-the-image)) chooses it:
 
+- `vscode` (default): VS Code in the browser (code-server), with both agents: see [vscode.md](vscode.md);
 - `opencode`: `opencode serve`, the opencode web UI;
 - `claude`: Claude Code has no web server; [ttyd](https://github.com/tsl0922/ttyd) serves its terminal UI in the browser (see [Claude Code](#claude-code)).
 
 ## Usage
 
-The `sandbox` container runs the web UI as its main process: [sandbox/scripts/entrypoint.sh](../sandbox/scripts/entrypoint.sh) handles the password, then starts the image's server ([server-opencode.sh](../sandbox/scripts/server-opencode.sh) or [server-claude.sh](../sandbox/scripts/server-claude.sh)). Get the URL, user and password with [web-credentials](../opencode/scripts/web-credentials.sh):
+The `sandbox` container runs the web UI as its main process: [sandbox/scripts/entrypoint.sh](../sandbox/scripts/entrypoint.sh) handles the password, then starts the image's server, `sandbox-server`: [server-vscode.sh](../sandbox/scripts/server-vscode.sh), [server-opencode.sh](../sandbox/scripts/server-opencode.sh) or [server-claude.sh](../sandbox/scripts/server-claude.sh). Get the URL, user and password with [web-credentials](../sandbox/scripts/web-credentials.sh):
 
 ```bash
 docker compose exec sandbox web-credentials
 # URL:      http://127.0.0.1:4096
-# User:     opencode (or claude)
+# User:     opencode or claude (not shown for vscode)
 # Password: ...
 ```
 
 `web-credentials --password` prints the password alone, for a password manager or the clipboard (`docker compose exec -T sandbox web-credentials --password | xclip -selection clipboard`).
 
-Open <http://127.0.0.1:4096> and log in. With opencode, projects are the repositories under `/home/ubuntu/workspace`. The terminal UI keeps working alongside (`docker compose exec sandbox opencode <repo>`).
+Open <http://127.0.0.1:4096> and log in (code-server only asks for the password). With the opencode web UI, projects are the repositories under `/home/ubuntu/workspace`. The terminal UI keeps working alongside (`docker compose exec sandbox opencode <repo>`).
 
 ## Enable or disable
 
@@ -41,14 +42,14 @@ Web mode is on by default. Set `SANDBOX_SERVER_ENABLED=0` (in `.env` or the envi
 
 ## Variables
 
-Set them in `.env` or the environment, then `docker compose up -d`. They replace the former `OPENCODE_SERVER_*` variables; the server scripts pass them on to each tool (`OPENCODE_SERVER_USERNAME` and `OPENCODE_SERVER_PASSWORD` for `opencode serve`, `--credential` for ttyd).
+Set them in `.env` or the environment, then `docker compose up -d`. They replace the former `OPENCODE_SERVER_*` variables; the server scripts pass them on to each tool (`OPENCODE_SERVER_USERNAME` and `OPENCODE_SERVER_PASSWORD` for `opencode serve`, `--credential` for ttyd, `PASSWORD` for code-server).
 
 | Variable                  | Default    | Role                                                            |
 | ------------------------- | ---------- | --------------------------------------------------------------- |
-| `SANDBOX_IMAGE`           | `opencode` | Image to build and run: `opencode` or `claude`                  |
+| `SANDBOX_IMAGE`           | `vscode`   | Image to build and run, and so the web UI: `vscode`, `opencode` or `claude` |
 | `SANDBOX_SERVER_ENABLED`  | `1`        | `0`: no web UI, the container stays idle                        |
 | `SANDBOX_SERVER_PASSWORD` | generated  | Web UI password, see [Password](#password)                      |
-| `SANDBOX_SERVER_USERNAME` | image name | Web UI user (`opencode` or `claude`)                            |
+| `SANDBOX_SERVER_USERNAME` | image name | Web UI user (`opencode` or `claude`); not used by code-server   |
 
 ## Claude Code
 
@@ -78,7 +79,7 @@ flowchart LR
         web["web<br/>nginx relay"]
     end
     subgraph agent["network: agent (internal: true)"]
-        sandbox["sandbox<br/>opencode serve or ttyd :4096"]
+        sandbox["sandbox<br/>opencode serve, ttyd or code-server :4096"]
     end
     web -->|"sandbox:4096"| sandbox
     sandbox -->|"HTTP(S)_PROXY"| proxy["proxy (Squid)"]
@@ -86,12 +87,12 @@ flowchart LR
 
 - The relay only forwards inbound requests to `sandbox:4096`. Outbound traffic from the sandbox still goes through the Squid proxy and its allowlist; the relay does not give the sandbox a way out.
 - The port is published on the host **loopback only** (`127.0.0.1:4096`): it is not reachable from other machines.
-- The web UI is served from the image (opencode itself, or ttyd and its bundled page); no extra domain is needed in [squid/allowed-domains.txt](../squid/allowed-domains.txt).
+- The web UI is served from the image (opencode itself, ttyd and its bundled page, or code-server); no extra domain is needed in [squid/allowed-domains.txt](../squid/allowed-domains.txt).
 - The relay keeps WebSocket and server-sent events connections open (`proxy_buffering off`, long read timeout) for live session updates.
 
 ## Security
 
-- **A password is always set.** Without one, opencode and ttyd serve the UI with no authentication: anyone or anything able to reach `127.0.0.1:4096` (other local users, a malicious web page through DNS rebinding…) could drive the agent, which is equivalent to a shell in the sandbox. This is why the entrypoint generates one when none is given.
+- **A password is always set.** Without one, opencode, ttyd and code-server serve the UI with no authentication: anyone or anything able to reach `127.0.0.1:4096` (other local users, a malicious web page through DNS rebinding…) could drive the agent, which is equivalent to a shell in the sandbox. This is why the entrypoint generates one when none is given.
 - The password is **not printed to the container logs**, which may be collected by a logging driver or shared when reporting an issue. It is read on demand from the file (`web-credentials`), which requires `docker compose exec`: Docker access already grants more than the UI.
 - The agent can read the password (process environment, file on the volume). It only protects access to the UI; do not reuse it elsewhere.
 - Do not publish the port on other interfaces (`0.0.0.0:4096`). For remote access, use an SSH tunnel (`ssh -L 4096:127.0.0.1:4096 host`) or a reverse proxy with TLS and authentication in front.
