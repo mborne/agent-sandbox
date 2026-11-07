@@ -9,6 +9,10 @@ ghcr.io
 .pypi.org
 files.pythonhosted.org
 registry.npmjs.org
+# code-server: Open VSX extension marketplace (API and downloads).
+# Extensions run with the agent's rights: remove to block them, see docs/vscode.md
+open-vsx.org
+openvsx.eclipsecontent.org
 .ubuntu.com
 .debian.org
 .geopf.fr

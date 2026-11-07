@@ -12,13 +12,14 @@ A container for running a coding agent, [opencode](https://opencode.ai) or [Clau
 
 ## Features
 
-- **Choice of agent**: one image per tool, selected with `SANDBOX_IMAGE`: `opencode` (default) or `claude`. Both share the same volumes, so repositories and the web password are kept when switching. → [Choose the agent](#choose-the-agent)
+- **Choice of image**: selected with `SANDBOX_IMAGE`: `vscode` (default, VS Code with both agents), `opencode` or `claude` (one agent and its own web UI). They share the same volumes, so repositories and the web password are kept when switching. → [Choose the image](#choose-the-image)
 - **Network isolation**: no direct Internet access, all traffic goes through a Squid proxy that only allows the domains in [squid/allowed-domains.txt](squid/allowed-domains.txt), on ports 80 and 443. Every request is logged. → [docs/networking.md](docs/networking.md)
 - **Model provider setup**: `setup-albert` configures the [Albert API](https://guides.ia.numerique.gouv.fr/albert-api) for opencode in one command; other providers use `opencode auth login`; Claude Code uses its own login. → [docs/model-provider.md](docs/model-provider.md)
 - **Opt-in GitHub access**: no Git credentials by default; `setup-github` adds a fine-grained token so the agent can push and open pull requests. → [docs/github.md](docs/github.md)
 - **MCP servers**: recommended remote servers for French public data (`datagouv`, `geocontext`, `insee`). → [docs/mcp.md](docs/mcp.md)
 - **Agent skills**: where opencode looks for skills, recommended skills ([etalab-ia/skills](https://github.com/etalab-ia/skills)). → [docs/skills.md](docs/skills.md)
-- **Web mode**: browser UI on `127.0.0.1:4096` (`opencode serve`, or the Claude Code terminal UI served by ttyd), on by default (`SANDBOX_SERVER_ENABLED=0` to disable), password generated on first start, through a relay that keeps the sandbox on its internal network. → [docs/web-mode.md](docs/web-mode.md)
+- **Web mode**: browser UI on `127.0.0.1:4096`, on by default (`SANDBOX_SERVER_ENABLED=0` to disable), password generated on first start, through a relay that keeps the sandbox on its internal network. → [docs/web-mode.md](docs/web-mode.md)
+- **VS Code in the browser**: the default `vscode` image serves [code-server](https://github.com/coder/code-server), with the opencode and Claude Code CLIs in its terminal and the Claude Code extension; the `opencode` and `claude` images serve the agent's own web UI instead (`opencode serve`, or the Claude Code terminal UI served by ttyd). → [docs/vscode.md](docs/vscode.md)
 - **Portable approach**: the sandboxing mechanism (isolated network, Squid allowlist, persistent volumes) does not depend on the agent or Docker Compose. The same setup can run other coding agents, or move to Kubernetes in web mode with NetworkPolicies forcing traffic through the proxy. → [docs/portability.md](docs/portability.md)
 - **Persistent configuration**: providers, tokens, skills and cloned repositories live on named volumes and survive container recreation (see [Architecture](#architecture)).
 
@@ -33,9 +34,9 @@ A container for running a coding agent, [opencode](https://opencode.ai) or [Clau
 
 | Service   | Role                                                                                                                                                                                                                                   |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sandbox` | Image built from [sandbox/Dockerfile](sandbox/Dockerfile), target chosen by `SANDBOX_IMAGE` (Ubuntu 24.04, `git`, `gh`, `jq`, `ripgrep`, Node.js with `npm`/`npx`, Python 3 with `uv`/`uvx`, setup scripts; plus the opencode CLI or Claude Code and ttyd), see [sandbox/README.md](sandbox/README.md). Runs as the unprivileged user `ubuntu` (uid 1000). Working directory: `/home/ubuntu/workspace`. |
+| `sandbox` | Image built from [sandbox/Dockerfile](sandbox/Dockerfile), target chosen by `SANDBOX_IMAGE` (Ubuntu 24.04, `git`, `gh`, `jq`, `ripgrep`, Node.js with `npm`/`npx`, Python 3 with `uv`/`uvx`, setup scripts; plus code-server, both agents and the Claude Code extension, or one agent and its web server), see [sandbox/README.md](sandbox/README.md). Runs as the unprivileged user `ubuntu` (uid 1000). Working directory: `/home/ubuntu/workspace`. |
 | `proxy`   | Squid, the only way out to the Internet. Filters domains using [squid/allowed-domains.txt](squid/allowed-domains.txt).                                                                                                                 |
-| `web`     | nginx relay publishing the sandbox web UI (web mode) on `127.0.0.1:4096`, see [docs/web-mode.md](docs/web-mode.md).                                                                                                    |
+| `web`     | nginx relay publishing the sandbox web UI (web mode, or VS Code) on `127.0.0.1:4096`, see [docs/web-mode.md](docs/web-mode.md).                                                                                        |
 
 - The `agent` network is `internal`: the `sandbox` container has **no direct Internet access**, everything goes through `proxy:3128` (`HTTP(S)_PROXY` variables). See [docs/networking.md](docs/networking.md) for the diagram and filtering rules.
 - Only ports 80 and 443 are allowed: **no SSH**, repositories are cloned over HTTPS.
@@ -58,11 +59,11 @@ The agent can be used in two ways, which share the same container, repositories 
 
 These steps apply to both usages.
 
-1. Start the stack, with opencode (default) or Claude Code (see [Choose the agent](#choose-the-agent)):
+1. Start the stack, with VS Code (default) or one agent's web UI (see [Choose the image](#choose-the-image)):
 
    ```bash
    docker compose up -d --build
-   SANDBOX_IMAGE=claude docker compose up -d --build
+   SANDBOX_IMAGE=opencode docker compose up -d --build
    ```
 
 2. Configure the model provider (its domain must be in the allowlist, see [docs/model-provider.md](docs/model-provider.md)):
@@ -83,21 +84,23 @@ These steps apply to both usages.
 
 ### Web usage
 
-The `sandbox` container runs the web UI as its main process: `opencode serve`, or the Claude Code terminal UI served by ttyd. Get the user and password (they are not written to the logs):
+The `sandbox` container runs the image's web UI as its main process: VS Code in the browser (code-server) with the default `vscode` image. Get the password (it is not written to the logs):
 
 ```bash
 docker compose exec sandbox web-credentials
 ```
 
-Open <http://127.0.0.1:4096> and log in. With opencode, pick the repository among the projects under `/home/ubuntu/workspace`. With Claude Code, give the repository in the URL: `http://127.0.0.1:4096/?arg=<repo>` (each browser tab starts its own `claude` process). Password management, the relay and the security model are described in [docs/web-mode.md](docs/web-mode.md).
+Open <http://127.0.0.1:4096> and log in with the password, or open a repository directly with `http://127.0.0.1:4096/?folder=/home/ubuntu/workspace/<repo>`. Run an agent in the integrated terminal (`` Ctrl+` ``), `opencode` or `claude`, or use the Claude Code extension (see [docs/vscode.md](docs/vscode.md)). Password management, the relay and the security model are described in [docs/web-mode.md](docs/web-mode.md).
+
+To use the agent's own web UI instead, set `SANDBOX_IMAGE` to `opencode` or `claude` (in `.env` or the environment) and run `docker compose up -d --build`: `opencode serve`, or the Claude Code terminal UI served by ttyd, then replaces VS Code on the same port, with the same password and a user name. With opencode, pick the repository among the projects under `/home/ubuntu/workspace`; with Claude Code, give it in the URL: `http://127.0.0.1:4096/?arg=<repo>` (see [docs/web-mode.md](docs/web-mode.md#claude-code)).
 
 ### CLI usage
 
 Run the terminal UI in the repository:
 
 ```bash
-docker compose exec sandbox opencode <repo>                 # opencode image
-docker compose exec -it -w /home/ubuntu/workspace/<repo> sandbox claude  # claude image
+docker compose exec sandbox opencode <repo>                 # vscode or opencode image
+docker compose exec -it -w /home/ubuntu/workspace/<repo> sandbox claude  # vscode or claude image
 ```
 
 For a shell in the container:
@@ -108,16 +111,17 @@ docker compose exec sandbox bash
 
 The CLI works whether web mode is on or off. If the browser UI is not needed, set `SANDBOX_SERVER_ENABLED=0` (in `.env` or the environment) and run `docker compose up -d`: the `sandbox` container then stays idle and no server listens (see [docs/web-mode.md](docs/web-mode.md#enable-or-disable)).
 
-### Choose the agent
+### Choose the image
 
-`SANDBOX_IMAGE` (in `.env` or the environment) selects the image, a target of [sandbox/Dockerfile](sandbox/Dockerfile) (see [sandbox/README.md](sandbox/README.md)):
+`SANDBOX_IMAGE` (in `.env` or the environment) selects the image, a target of [sandbox/Dockerfile](sandbox/Dockerfile) (see [sandbox/README.md](sandbox/README.md)), and so the web UI:
 
-| `SANDBOX_IMAGE`      | CLI        | Web UI on port 4096                                  |
-| -------------------- | ---------- | ---------------------------------------------------- |
-| `opencode` (default) | `opencode` | `opencode serve`                                     |
-| `claude`             | `claude`   | Claude Code terminal UI in the browser, through [ttyd](https://github.com/tsl0922/ttyd) |
+| `SANDBOX_IMAGE`    | CLI                    | Web UI                                                                                   |
+| ------------------ | ---------------------- | ---------------------------------------------------------------------------------------- |
+| `vscode` (default) | `opencode` and `claude` | VS Code in the browser (code-server) with the Claude Code extension, see [docs/vscode.md](docs/vscode.md) |
+| `opencode`         | `opencode`             | `opencode serve`                                                                         |
+| `claude`           | `claude`               | Claude Code terminal UI in the browser, through [ttyd](https://github.com/tsl0922/ttyd)  |
 
-Switch with `docker compose up -d --build` after changing the variable. Volumes are shared: repositories, the web password and the `setup-github` configuration are kept; each tool keeps its own configuration in `~/.config`.
+The `opencode` and `claude` images are smaller and do not include an IDE. Switch with `docker compose up -d --build` after changing the variable. Volumes are shared: repositories, the web password and the `setup-github` configuration are kept; each tool keeps its own configuration in `~/.config`.
 
 Claude Code also offers [Remote Control](https://code.claude.com/docs/en/remote-control) (`claude remote-control`), which drives the session from claude.ai/code instead of a local UI. It needs no extra port or domain, but requires a claude.ai subscription login (no API key, no custom `ANTHROPIC_BASE_URL`) and stores transcripts on Anthropic servers. See [docs/web-mode.md](docs/web-mode.md#claude-code).
 
@@ -141,8 +145,10 @@ See [docs/github.md](docs/github.md).
 | Show requests allowed / denied by the proxy                                     | `docker compose logs -f proxy`                                      |
 | Update opencode (latest release)                                                | `docker compose build --no-cache sandbox && docker compose up -d`   |
 | Pin an opencode version                                                         | `docker compose build --build-arg OPENCODE_VERSION=1.18.35 sandbox` |
-| Update or pin Claude Code (auto-update is disabled in the image)                | `SANDBOX_IMAGE=claude docker compose build --no-cache sandbox` or `--build-arg CLAUDE_CODE_VERSION=2.1.295` |
+| Update or pin Claude Code (auto-update is disabled in the image)                | `docker compose build --no-cache sandbox` or `--build-arg CLAUDE_CODE_VERSION=2.1.295` |
+| Pin the Claude Code extension version (`vscode` image)                         | `docker compose build --build-arg CLAUDE_CODE_EXTENSION_VERSION=2.1.319 sandbox` |
 | Pin the Node.js major version or the uv version                                 | `docker compose build --build-arg NODE_VERSION=22 --build-arg UV_VERSION=0.12.24 sandbox` |
+| Pin the code-server version (`vscode` image)                                    | `docker compose build --build-arg CODE_SERVER_VERSION=4.141.0 sandbox` |
 | Stop the stack                                                                  | `docker compose down`                                               |
 | Remove everything, including cloned repositories, configuration and credentials | `docker compose down -v`                                            |
 
@@ -161,6 +167,7 @@ See [docs/github.md](docs/github.md).
 - [Sandbox image](sandbox/README.md): build stages, content, build arguments
 - [Network architecture](docs/networking.md)
 - [Web mode](docs/web-mode.md)
+- [VS Code in the browser](docs/vscode.md)
 - [Docker hardening](docs/docker-hardening.md)
 - [Portability](docs/portability.md)
 - [Model provider](docs/model-provider.md)

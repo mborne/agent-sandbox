@@ -7,7 +7,7 @@ The sandbox relies on a simple principle: **the agent has no route to the Intern
 - `HTTP(S)_PROXY` variables so that tools use the proxy, tools that ignore them simply fail to connect;
 - persistent volumes for configuration and code.
 
-This page describes two ways to reuse it: running another coding agent, and moving to Kubernetes. Claude Code is implemented as a second image ([Choose the agent](../README.md#choose-the-agent)); other agents and Kubernetes are not.
+This page describes two ways to reuse it: running another coding agent, and moving to Kubernetes. Claude Code is implemented as a second agent ([Choose the image](../README.md#choose-the-image)); other agents and Kubernetes are not.
 
 ## Other coding agents
 
@@ -15,7 +15,7 @@ This page describes two ways to reuse it: running another coding agent, and movi
 
 To run another agent (Codex CLI, Gemini CLI, Aider…) in the same sandbox, the way the `claude` image does:
 
-1. **Install it** in a new target of [sandbox/Dockerfile](../sandbox/Dockerfile) (`FROM base AS <name>`), selected with `SANDBOX_IMAGE=<name>`. The build runs outside the sandbox network, so install scripts and package registries are reachable at that point. For web mode, add a `sandbox-server` script that listens on `SANDBOX_SERVER_PORT` with `SANDBOX_SERVER_USERNAME` and `SANDBOX_SERVER_PASSWORD` (see [server-claude.sh](../sandbox/scripts/server-claude.sh)).
+1. **Install it** in a new target of [sandbox/Dockerfile](../sandbox/Dockerfile) (`FROM base AS <name>`), selected with `SANDBOX_IMAGE=<name>`. The build runs outside the sandbox network, so install scripts and package registries are reachable at that point. For web mode, add a `sandbox-server` script that listens on `SANDBOX_SERVER_PORT` with `SANDBOX_SERVER_USERNAME` and `SANDBOX_SERVER_PASSWORD` (see [server-claude.sh](../sandbox/scripts/server-claude.sh)). To also offer it in the `vscode` image, copy it from its target with `COPY --from=<name>`, as done for opencode and Claude Code.
 2. **Allow its domains** in [squid/allowed-domains.txt](../squid/allowed-domains.txt): the model API and, if it uses one, the login endpoint. Telemetry or update domains can stay denied; the agent should keep working without them. Watch `docker compose logs -f proxy` for `TCP_DENIED` on the first runs to find what is missing.
 3. **Check proxy support**: the agent must honor `HTTPS_PROXY`. Node.js-based agents also need `NODE_USE_ENV_PROXY=1`, already set in [compose.yaml](../compose.yaml).
 4. **Persist its configuration**: only `~/.config`, `~/.local` and `~/workspace` are on named volumes. An agent that stores credentials elsewhere (for example `~/.claude`) needs an extra volume or a variable pointing to one of these directories.

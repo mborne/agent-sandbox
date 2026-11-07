@@ -3,7 +3,7 @@
 # which sets SANDBOX_SERVER_PORT, SANDBOX_SERVER_USERNAME and
 # SANDBOX_SERVER_PASSWORD (see docs/web-mode.md).
 #
-#   docker compose up -d   # SANDBOX_IMAGE=opencode (default)
+#   SANDBOX_IMAGE=opencode docker compose up -d --build
 set -euo pipefail
 
 # opencode reads the basic auth credentials from its own variables

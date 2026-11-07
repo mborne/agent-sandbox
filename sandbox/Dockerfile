@@ -1,10 +1,12 @@
-# Images for the sandbox service, one target per tool, selected in compose.yaml
-# with SANDBOX_IMAGE:
+# Images for the sandbox service, one target per web UI, selected in
+# compose.yaml with SANDBOX_IMAGE:
+#   vscode    VS Code in the browser (code-server) with both CLIs and the
+#             Claude Code extension
 #   opencode  opencode CLI (https://opencode.ai), web UI with `opencode serve`
 #   claude    Claude Code CLI (https://code.claude.com), web UI with ttyd
 #
-#   docker compose up -d --build                        # opencode (default)
-#   SANDBOX_IMAGE=claude docker compose up -d --build
+#   docker compose up -d --build                        # vscode (default)
+#   SANDBOX_IMAGE=opencode docker compose up -d --build
 #   docker build --target claude sandbox
 
 # Node.js major version (official node image tag) and uv version (official uv image tag)
@@ -98,3 +100,39 @@ RUN npm install -g "@anthropic-ai/claude-code${CLAUDE_CODE_VERSION:+@$CLAUDE_COD
 USER ubuntu
 
 COPY --chmod=755 scripts/server-claude.sh /usr/local/bin/sandbox-server
+
+FROM base AS vscode
+
+ENV SANDBOX_IMAGE=vscode
+# Same settings as the opencode and claude targets
+ENV CLAUDE_CONFIG_DIR=/home/ubuntu/.config/claude
+ENV DISABLE_AUTOUPDATER=1
+
+USER root
+
+# VS Code in the browser (code-server), deb package from the GitHub releases.
+# Empty = latest release, otherwise e.g. "4.141.0"
+ARG CODE_SERVER_VERSION=""
+RUN curl -fsSL https://code-server.dev/install.sh \
+    | sh -s -- ${CODE_SERVER_VERSION:+--version "$CODE_SERVER_VERSION"} \
+ && rm -rf /root/.cache
+
+# Claude Code extension from Open VSX, installed as a built-in extension: the
+# user extensions directory is on the opencode-local volume, which would hide it.
+# Empty = latest version, otherwise e.g. "2.1.319"
+ARG CLAUDE_CODE_EXTENSION_VERSION=""
+RUN code-server --extensions-dir /usr/lib/code-server/lib/vscode/extensions \
+      --install-extension "anthropic.claude-code${CLAUDE_CODE_EXTENSION_VERSION:+@$CLAUDE_CODE_EXTENSION_VERSION}" \
+ && rm -rf /root/.cache /root/.local/share/code-server \
+      /usr/lib/code-server/lib/vscode/extensions/extensions.json
+
+# Both CLIs, copied from the other targets rather than installed twice. Last,
+# since they change more often than code-server.
+COPY --from=opencode /home/ubuntu/.opencode/bin/opencode /usr/local/bin/opencode
+COPY --from=claude /usr/local/lib/node_modules/@anthropic-ai /usr/local/lib/node_modules/@anthropic-ai
+RUN ln -s ../lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe /usr/local/bin/claude
+
+USER ubuntu
+
+COPY --chmod=755 scripts/setup-albert.sh /usr/local/bin/setup-albert
+COPY --chmod=755 scripts/server-vscode.sh /usr/local/bin/sandbox-server
